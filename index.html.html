@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SERROW // SPEC-00 — descent</title>
+<meta name="description" content="Serrow — I create things, with a love of visual esoteria. We build to solve problems and create beauty.">
+<meta name="theme-color" content="#05060c">
+<link rel="icon" type="image/svg+xml" href="serrow-favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SERROW">
+<meta property="og:description" content="I create things, with a love of visual esoteria. Descend.">
+<meta name="twitter:card" content="summary">
+<style>
+:root{
+  --steel:#c6bca6; --steel-dim:rgba(198,186,158,.5); --ink:#f1ead9;
+  --cyan:#cda26a; --gold:#f2c879; --red:#d9744e;
+  --mono:ui-monospace,"Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:#000;color:var(--steel);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased}
+#galaxy{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+#darken{position:fixed;inset:0;z-index:1;pointer-events:none;background:#000;opacity:0}
+#vignette{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:0;background:radial-gradient(120% 120% at 50% 50%,transparent 32%,rgba(0,0,3,.94) 100%)}
+.scan{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.18;mix-blend-mode:multiply;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.5) 2px 3px)}
+#markers{position:fixed;inset:0;z-index:3;pointer-events:none;width:100%;height:100%}
+.mk line,.mk circle,.mk polygon{fill:none;vector-effect:non-scaling-stroke}
+.mk .draw{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .65s ease}
+.mk .lead{stroke:rgba(190,165,112,.5);stroke-width:1}
+.mk .gl{stroke:rgba(206,186,142,.85);stroke-width:1.3}.mk .gl.warm{stroke:rgba(242,200,121,.92)}
+.mk .tdot{fill:rgba(205,180,130,.95)}
+.mk text{font:11.5px var(--mono);letter-spacing:.16em;fill:rgba(198,186,158,.9);text-transform:uppercase}.mk text.warm{fill:rgba(242,200,121,.92)}
+
+/* instrument chrome */
+.edge{position:fixed;z-index:20;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--steel-dim);white-space:pre;pointer-events:none;line-height:1.7}
+#e-tl{top:16px;left:18px}#e-tr{top:16px;right:18px;text-align:right}#e-br{bottom:16px;right:18px;text-align:right}
+.edge .k{color:rgba(205,162,106,.6)}.edge .g{color:var(--gold)}.edge .r{color:var(--red)}
+.f-corner{position:fixed;width:13px;height:13px;z-index:21;pointer-events:none;border:1px solid rgba(242,200,121,.4)}
+.vnav{position:fixed;right:24px;top:50%;transform:translateY(-50%);z-index:22;display:flex;flex-direction:column;gap:18px;align-items:flex-end;font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase}
+.vnav a{color:var(--steel-dim);text-decoration:none;position:relative;padding-right:16px;transition:color .25s}
+.vnav a::after{content:"";position:absolute;right:0;top:50%;width:5px;height:5px;border-radius:50%;background:rgba(164,142,100,.45);transform:translateY(-50%);transition:background .25s,box-shadow .25s}
+.vnav a:hover{color:var(--gold)}
+.vnav a:hover::after{background:var(--gold);box-shadow:0 0 9px var(--gold)}
+@media(max-width:820px){.vnav{right:14px;gap:14px;font-size:9px}}
+
+/* content */
+main{position:relative;z-index:10}
+section{min-height:100vh;display:flex;align-items:center;padding:120px 0}
+.wrap{width:100%;max-width:1080px;margin:0 auto;padding:0 40px}
+.eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);opacity:.85}
+.eyebrow::before{content:"◢ "}
+.panel{background:radial-gradient(120% 140% at 0% 0%,rgba(6,9,16,.78),rgba(6,9,16,.32) 70%,transparent);
+  backdrop-filter:blur(2px);border-left:1px solid rgba(150,132,96,.16);padding:34px 38px}
+
+/* hero */
+.surface{position:fixed;left:34px;bottom:58px;z-index:18;pointer-events:none}
+.surface .d{font-family:var(--mono);font-size:10px;letter-spacing:.34em;color:var(--steel-dim);text-transform:uppercase}
+.surface .n{font-family:var(--mono);font-size:clamp(28px,4.4vw,42px);letter-spacing:.22em;color:var(--ink);margin:7px 0 5px}
+.surface .n b{color:var(--gold);text-shadow:0 0 22px rgba(242,200,121,.5)}
+.surface .t{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:rgba(242,200,121,.62);text-transform:uppercase}
+.scrolldown{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:18;font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--steel-dim);display:flex;gap:10px;align-items:center;pointer-events:none}
+.scrolldown .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold);animation:pul 2.4s infinite}
+.hero .desig{font-family:var(--mono);font-size:12px;letter-spacing:.4em;color:var(--steel-dim);text-transform:uppercase}
+.hero h1{font-family:var(--mono);font-size:clamp(40px,8vw,92px);letter-spacing:.06em;color:var(--ink);font-weight:600;margin:14px 0 8px;line-height:.95;text-shadow:0 0 50px rgba(0,0,0,.6)}
+.hero h1 b{color:var(--gold);text-shadow:0 0 36px rgba(242,200,121,.55)}
+.hero .tag{font-family:var(--mono);font-size:13px;letter-spacing:.26em;color:var(--gold);text-transform:uppercase}
+.hero .lede{max-width:30em;margin-top:22px;font-size:16px}
+.scrollcue{margin-top:36px;font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--steel-dim);text-transform:uppercase;display:inline-flex;gap:10px;align-items:center}
+.scrollcue .d{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold);animation:pul 2.4s infinite}
+@keyframes pul{0%,100%{opacity:.35}50%{opacity:1}}
+
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid rgba(150,132,96,.16);padding-bottom:12px;margin-bottom:28px}
+.sec-head h2{font-family:var(--mono);font-size:clamp(20px,3vw,30px);color:var(--ink);font-weight:600;letter-spacing:.03em}
+.sec-head .c{font-family:var(--mono);font-size:11px;color:var(--steel-dim);letter-spacing:.18em}
+
+/* specimens */
+/* codex specimen-plates */
+.specs{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.spec{position:relative;background:linear-gradient(158deg,rgba(31,26,17,.6),rgba(15,12,8,.5));border:1px solid rgba(164,142,100,.2);box-shadow:inset 0 0 55px rgba(74,55,26,.12);padding:22px 24px 20px;overflow:hidden;transition:border-color .3s,transform .35s,background .3s}
+.spec:hover{border-color:rgba(242,200,121,.55);transform:translateY(-3px);background:linear-gradient(158deg,rgba(44,35,21,.74),rgba(19,15,9,.58))}
+.spec::before,.spec::after{content:"";position:absolute;width:11px;height:11px;border:1px solid rgba(242,200,121,.5);opacity:0;transition:opacity .3s}
+.spec::before{top:7px;left:7px;border-right:0;border-bottom:0}
+.spec::after{bottom:7px;right:7px;border-left:0;border-top:0}
+.spec:hover::before,.spec:hover::after{opacity:1}
+.spec .sd{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--steel-dim);border-bottom:1px solid rgba(150,132,96,.16);padding-bottom:11px}
+.spec .sd .st{color:var(--cyan)}
+.spec h3{font-family:var(--mono);font-size:26px;color:var(--ink);margin:15px 0 8px;letter-spacing:.05em;font-weight:600}
+.spec:hover h3{color:var(--gold)}
+.spec p{font-size:13.5px;color:var(--steel);max-width:34em}
+.spec .ft{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:14px}
+.spec .tele{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--steel-dim);text-transform:uppercase}
+.spec .obs{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;color:var(--gold);opacity:.45;transition:opacity .3s;text-transform:uppercase;white-space:nowrap}
+.spec:hover .obs{opacity:1}
+/* about / entity */
+.about{display:grid;grid-template-columns:1fr 250px;gap:50px;align-items:start}
+.capture{position:relative;aspect-ratio:4/5;border:1px solid rgba(164,142,100,.22);background:linear-gradient(160deg,rgba(29,24,16,.72),rgba(13,11,7,.5));box-shadow:inset 0 0 55px rgba(74,55,26,.12);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.capture::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.1;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.5) 3px 4px)}
+.capture .ct{position:absolute;width:14px;height:14px;border:1px solid rgba(242,200,121,.5)}
+.capture .ct.tl{top:8px;left:8px;border-right:0;border-bottom:0}.capture .ct.tr{top:8px;right:8px;border-left:0;border-bottom:0}
+.capture .ct.bl{bottom:8px;left:8px;border-right:0;border-top:0}.capture .ct.br{bottom:8px;right:8px;border-left:0;border-top:0}
+.cap-inner{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--steel-dim);text-align:center;text-transform:uppercase;line-height:2.2}
+.cap-inner b{display:block;color:var(--gold);font-size:16px;letter-spacing:.2em;margin:6px 0}
+.cap-inner .pend{color:rgba(198,186,158,.38);font-size:9px}
+.bio2 .lead{font-family:var(--sans);font-size:22px;color:var(--ink);margin-bottom:18px}
+.bio2 .lead b{color:var(--gold)}
+.bio2 p{font-size:15.5px;line-height:1.78;margin-bottom:14px;max-width:42rem}
+.bio2 p b{color:var(--ink);font-weight:600}
+.now{margin-top:22px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--steel);border-top:1px solid rgba(150,132,96,.16);padding-top:15px}
+.now span{color:var(--cyan);letter-spacing:.2em;margin-right:12px}
+@media(max-width:820px){.about{grid-template-columns:1fr;gap:30px}.capture{max-width:240px;aspect-ratio:1}}
+.fields{font-family:var(--mono)}
+.fields>div{padding:12px 0;border-bottom:1px solid rgba(150,132,96,.14)}
+.fields>div:first-child{padding-top:0}
+.fields .k{display:block;color:var(--steel-dim);text-transform:uppercase;letter-spacing:.18em;font-size:9px}
+.fields .val{display:block;margin-top:5px;color:var(--ink);font-size:13px;letter-spacing:.03em}
+.fields .val.g{color:var(--gold)}
+.metrics{display:flex;flex-wrap:wrap;gap:8px 30px;align-items:center;margin-top:26px;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--steel-dim);text-transform:uppercase}
+.metrics .ml{color:rgba(205,162,106,.6);letter-spacing:.2em}
+.metrics .m b{color:var(--gold);font-weight:500;margin-left:6px;letter-spacing:.04em}
+@media(max-width:820px){.fields{grid-template-columns:1fr}}
+
+/* log */
+.logrow{display:grid;grid-template-columns:118px 104px 1fr auto;gap:22px;align-items:baseline;padding:20px 6px;border-bottom:1px solid rgba(150,132,96,.14);text-decoration:none;color:inherit;transition:.25s}
+.logrow:hover{padding-left:16px;background:linear-gradient(90deg,rgba(242,200,121,.05),transparent)}
+.logrow .date{font-family:var(--mono);font-size:11px;color:var(--steel-dim);letter-spacing:.1em}
+.logrow .ty{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase}
+.ty.tut{color:var(--cyan)}.ty.prog{color:var(--gold)}.ty.tho{color:#d98a6a}
+.logrow .tt{font-size:16px;color:var(--ink)}.logrow:hover .tt{color:var(--gold)}
+.logrow .tt small{display:block;font-size:12.5px;color:var(--steel-dim);margin-top:3px}
+.logrow .rt{font-family:var(--mono);font-size:10px;color:var(--steel-dim)}
+
+/* egress */
+.egress{justify-content:center;text-align:center}
+.egress .big{font-family:var(--mono);font-size:clamp(34px,7vw,82px);letter-spacing:.08em;color:var(--ink);line-height:1}
+.egress .big b{color:var(--gold);text-shadow:0 0 40px rgba(242,200,121,.5)}
+.egress .links{margin-top:26px;font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase}
+.egress .links a{color:var(--steel-dim);text-decoration:none;margin:0 14px;transition:color .25s}
+.egress .links a:hover{color:var(--gold)}
+.egress .horizon{margin-top:40px;font-family:var(--mono);font-size:10px;letter-spacing:.3em;color:rgba(242,200,121,.5)}
+.mark{display:block;margin:0 auto;filter:drop-shadow(0 0 18px rgba(242,200,121,.5))}
+.mark .markspin{transform-box:view-box;transform-origin:60px 60px;animation:markspin 46s linear infinite}
+.mark path{stroke-dasharray:1;stroke-dashoffset:1;animation:markdraw 2.6s ease forwards}
+@keyframes markspin{to{transform:rotate(360deg)}}
+@keyframes markdraw{to{stroke-dashoffset:0}}
+
+section:not(.hero) .wrap{position:relative}
+section:not(.hero) .wrap::before{content:"";position:absolute;inset:-46px -36px;z-index:-1;background:rgba(9,7,4,.6);backdrop-filter:blur(3px);
+  -webkit-mask-image:radial-gradient(126% 112% at 50% 50%,#000 50%,transparent 100%);mask-image:radial-gradient(126% 112% at 50% 50%,#000 50%,transparent 100%)}
+.eyebrow .dep{color:var(--gold);opacity:.7}
+.reveal{opacity:0;transform:translateY(48px) scale(.992);transition:opacity 1s ease,transform 1.1s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+@media(max-width:820px){.specs{grid-template-columns:1fr}.logrow{grid-template-columns:1fr;gap:5px}.logrow .rt{display:none}nav a:not(:last-child){display:none}}
+</style>
+</head>
+<body>
+  <canvas id="galaxy"></canvas>
+  <div id="darken"></div>
+  <div id="vignette"></div>
+  <svg id="markers"></svg>
+  <div class="scan"></div>
+  <div class="f-corner" style="top:8px;left:8px;border-right:0;border-bottom:0"></div>
+  <div class="f-corner" style="top:8px;right:8px;border-left:0;border-bottom:0"></div>
+  <div class="f-corner" style="bottom:8px;left:8px;border-right:0;border-top:0"></div>
+  <div class="f-corner" style="bottom:8px;right:8px;border-left:0;border-top:0"></div>
+  <div class="edge" id="e-tl"></div><div class="edge" id="e-tr"></div><div class="edge" id="e-br"></div>
+  <div class="surface" id="surface"><div class="d">SUBJECT // SPEC-00 · observed</div><div class="n">SERR<b>O</b>W</div><div class="t">build it true · let it go</div></div>
+  <div class="scrolldown" id="scrolldown"><span class="dot"></span> scroll to descend</div>
+
+  <div class="vnav">
+    <a href="#entity">Entity</a><a href="#forge">Forge</a><a href="#embers">Embers</a><a href="#egress">Egress</a>
+  </div>
+
+  <main>
+    <section class="hero"></section>
+
+    <section id="entity"><div class="wrap reveal">
+      <div class="eyebrow">Entity // subject dossier <span class="dep">· depth 1.6k m</span></div>
+      <div class="sec-head"><h2>ENTITY</h2><div class="c">spec-00 · serrow</div></div>
+      <div class="about">
+        <div class="bio2">
+          <p class="lead">I'm <b>Serrow</b>.</p>
+          <p>I enjoy creating things. We build to solve problems and create beauty.</p>
+          <p>Most of it starts as some idea I got stuck on and had to chase down.</p>
+          <p>Serrow can be found immersed in projects, virtual reality, or a good book.</p>
+        </div>
+        <div class="fields">
+          <div><span class="k">Designation</span><span class="val g">SPEC-00</span></div>
+          <div><span class="k">Discipline</span><span class="val">build · design · write</span></div>
+          <div><span class="k">Focus</span><span class="val">systems · interfaces</span></div>
+          <div><span class="k">Aesthetic</span><span class="val">visual esoteria</span></div>
+          <div><span class="k">Principle</span><span class="val">curiosity first</span></div>
+          <div><span class="k">Status</span><span class="val g">EVOLVING</span></div>
+        </div>
+      </div>
+      <div class="metrics">
+        <span class="ml">// live readout</span>
+        <span class="m">warmth<b id="m-warmth">0.886</b></span>
+        <span class="m">flux<b id="m-flux">42.0</b></span>
+        <span class="m">coherence<b id="m-coh">0.940</b></span>
+        <span class="m">entropy<b id="m-ent">0.5418</b></span>
+      </div>
+    </div></section>
+
+    <section id="forge"><div class="wrap reveal">
+      <div class="eyebrow">Forge // what gets built <span class="dep">· depth 3.8k m</span></div>
+      <div class="sec-head"><h2>FORGE</h2><div class="c">04 active · falling in</div></div>
+      <div class="specs">
+        <a class="spec"><div class="sd"><span>SPEC-01</span><span class="st">IN PRODUCTION</span></div><h3>GLYPH</h3><p>An agent-native format — staves you can drop in and run. The piece that's actually shipping.</p><div class="ft"><span class="tele">format · agents · runtime</span><span class="obs">observe →</span></div></a>
+        <a class="spec"><div class="sd"><span>SPEC-02</span><span class="st">NORTH STAR</span></div><h3>GALDR</h3><p>The runtime the whole stack reaches toward. Incantations that execute — the Weave hierarchy.</p><div class="ft"><span class="tele">runtime · weave · vision</span><span class="obs">observe →</span></div></a>
+        <a class="spec"><div class="sd"><span>SPEC-03</span><span class="st">SEED</span></div><h3>BLACKBIRD</h3><p>Lead enrichment, agent-first. The avian specimen — annotated, dissected, rendered as data.</p><div class="ft"><span class="tele">enrichment · seed</span><span class="obs">observe →</span></div></a>
+        <a class="spec"><div class="sd"><span>SPEC-04</span><span class="st">v0.6 BETA</span></div><h3>TWICE</h3><p>A presence-first interface for the plural mind. Paused, returning — the most personal build.</p><div class="ft"><span class="tele">identity · care · beta</span><span class="obs">observe →</span></div></a>
+      </div>
+    </div></section>
+
+    <section id="embers"><div class="wrap reveal">
+      <div class="eyebrow">Embers // sparks off the forge <span class="dep">· depth 6.4k m</span></div>
+      <div class="sec-head"><h2>EMBERS</h2><div class="c">tutorials · progress · thoughts</div></div>
+      <a class="logrow"><span class="date">2026·06·13</span><span class="ty tho">Thought</span><span class="tt">On being the specimen<small>Why I annotate everything — including myself — and how it became an aesthetic.</small></span><span class="rt">6 min</span></a>
+      <a class="logrow"><span class="date">2026·06·10</span><span class="ty tut">Tutorial</span><span class="tt">Sigils that inscribe themselves<small>Animating SVG paths so geometry draws itself onto the page.</small></span><span class="rt">9 min</span></a>
+      <a class="logrow"><span class="date">2026·06·05</span><span class="ty prog">Progress</span><span class="tt">Galdr: the Weave runtime takes shape<small>Wave → Stave → Weave. Where the execution model landed.</small></span><span class="rt">5 min</span></a>
+      <a class="logrow"><span class="date">2026·05·28</span><span class="ty tho">Thought</span><span class="tt">Build it true, then open your hands<small>The Kayaba model: creation and release over control.</small></span><span class="rt">7 min</span></a>
+    </div></section>
+
+    <section id="egress" class="egress"><div class="wrap reveal">
+      <div class="eyebrow" style="text-align:center">Egress // the event horizon <span class="dep">· depth 9.0k m</span></div>
+      <svg class="mark" viewBox="0 0 120 120" width="150" height="150" aria-label="Serrow" style="margin-top:14px">
+        <defs><radialGradient id="gw" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#fff2d4"/><stop offset="22%" stop-color="#f2c879"/>
+          <stop offset="70%" stop-color="#f2c879" stop-opacity=".55"/><stop offset="100%" stop-color="#f2c879" stop-opacity="0"/></radialGradient></defs>
+        <g class="markspin"><path id="egresswhirl" pathLength="1" fill="none" stroke="url(#gw)" stroke-width="2.6" stroke-linecap="round"/></g>
+        <circle cx="60" cy="60" r="4.2" fill="#fff2d4"/>
+      </svg>
+      <div class="links"><a href="https://github.com/Serrowxd" target="_blank" rel="noopener">GitHub</a><a href="https://quartz-portfolio-omega.vercel.app" target="_blank" rel="noopener">Garden</a><a href="https://www.instagram.com/serrowxd/" target="_blank" rel="noopener">Insta</a></div>
+      <div class="horizon">// you have reached the center · the instrument is still recording</div>
+    </div></section>
+  </main>
+
+<script>
+/* ===================== GALAXY (fixed bg, scroll-zoom) ===================== */
+const N=32000, ARMS=4, ARMSC=0.6, DIFF=0.55, WIND=5.0, ROUT=1.0, HOLE=0.063, CSIG=0.035, COLW=0.34,
+  INFALL=0.0006, OMEGA=0.0009, FADE=0.32, COREB=2.8, DISKB=0.5, DIFFDIM=0.5, PSIZE=1.2, RK=1.18, ALPHA=2.4;
+const cv=document.getElementById('galaxy'),ctx=cv.getContext('2d');
+const sm=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x);};
+const breath=t=>0.75+0.25*(0.5*Math.sin(t*0.013)+0.3*Math.sin(t*0.021+1.3)+0.2*Math.sin(t*0.0073+2.1));
+const g3=()=>(Math.random()+Math.random()+Math.random()-1.5)/1.5;
+const GO=[255,170,75],WH=[232,240,255];
+let W,H,DPR,cx,cy,R;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;
+  cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';cx=W/2;cy=H/2;R=Math.min(W,H)*RK;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);}
+resize();addEventListener('resize',resize);
+let P=[];
+function seed(p,f){const k=Math.floor(Math.random()*ARMS);p.diff=Math.random()<DIFF;
+  p.arm=p.diff?Math.random()*6.2832:((k/ARMS)*6.2832+g3()*ARMSC);
+  p.r=f?0.95+Math.random()*0.12:Math.random()*1.06;p.w=0.6+Math.random()*0.9;return p;}
+for(let i=0;i<N;i++)P.push(seed({},0));
+let f=0,spin=0,zoom=1;
+function frame(){
+  f++;
+  curP+=(targetP-curP)*0.06;                       // smooth, weighty fall
+  zoom=1+Math.pow(curP,1.5)*2.6;                    // accelerating infall (gravity)
+  spin+=OMEGA*(1+curP*2.6);                         // the maw churns faster as you fall in
+  const coreBoost=1+curP*0.7;                       // core intensifies near the horizon
+  darken.style.opacity=Math.pow(curP,1.25)*0.82;   // deeper = darker
+  vig.style.opacity=curP*0.9;                       // tunnel-vision closing in
+  mk.style.opacity=Math.max(0,1-curP*3);           // markers belong to the surface
+  surf.style.opacity=Math.max(0,1-curP*3);         // wordmark fades as you fall
+  scd.style.opacity=Math.max(0,1-curP*6);
+  const br=breath(f);const Rz=R*zoom;
+  ctx.globalCompositeOperation='source-over';ctx.fillStyle=`rgba(0,0,0,${FADE})`;ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation='lighter';
+  for(const p of P){
+    p.r-=INFALL*(0.7+0.5*(1-Math.min(1,p.r)))*p.w;
+    if(p.r<HOLE){seed(p,1);continue;}                          // respawn before the hole — nothing crosses in
+    const ang=p.arm-WIND*p.r+spin;
+    const x=cx+Math.cos(ang)*p.r*Rz, y=cy+Math.sin(ang)*p.r*Rz;
+    const inner=sm(HOLE,HOLE+0.07,p.r);                        // dissipate within the accretion disk
+    const rdh=p.r-(HOLE+0.035), core=Math.exp(-(rdh*rdh)/(2*CSIG*CSIG));
+    const disk=Math.pow(1-sm(0.0,ROUT,p.r),1.4);
+    const bright=inner*((COREB*coreBoost*core*br+DISKB*disk)*(p.diff?DIFFDIM:1.0));
+    if(bright<=0.01)continue;
+    const pc=sm(HOLE,COLW,p.r);
+    const R0=GO[0]+(WH[0]-GO[0])*pc,G0=GO[1]+(WH[1]-GO[1])*pc,B0=GO[2]+(WH[2]-GO[2])*pc;
+    ctx.globalAlpha=Math.min(0.97,bright*ALPHA);
+    const sz=PSIZE*(0.8+0.9*bright)*DPR;
+    ctx.fillStyle=`rgb(${R0|0},${G0|0},${B0|0})`;ctx.fillRect(x-sz/2,y-sz/2,sz,sz);
+  }
+  ctx.globalAlpha=1;
+  const gg=ctx.createRadialGradient(cx,cy,0,cx,cy,Rz*HOLE*2.0);
+  gg.addColorStop(0,'rgba(255,200,130,0)');gg.addColorStop(0.5,'rgba(255,205,140,0.5)');gg.addColorStop(0.66,'rgba(255,195,120,0.12)');gg.addColorStop(1,'rgba(255,195,120,0)');
+  ctx.fillStyle=gg;ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation='source-over';
+  const bc=ctx.createRadialGradient(cx,cy,0,cx,cy,Rz*HOLE);
+  bc.addColorStop(0,'#000');bc.addColorStop(0.82,'#000');bc.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=bc;ctx.fillRect(0,0,W,H);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ===================== DESCENT: scroll → zoom, darken, depth ===================== */
+const darken=document.getElementById('darken'),vig=document.getElementById('vignette'),mk=document.getElementById('markers'),surf=document.getElementById('surface'),scd=document.getElementById('scrolldown');
+let targetP=0,curP=0;
+function onScroll(){const max=document.body.scrollHeight-innerHeight;targetP=max>0?Math.min(1,scrollY/max):0;}
+addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+/* ===================== reveals ===================== */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* ===================== glyph markers (surface only) ===================== */
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const GLYPHS=[
+    [{t:'circle',cx:0,cy:0,r:14},{t:'polygon',points:[[0,-12],[10,7],[-10,7]]}],
+    [{t:'polygon',points:[[0,-13],[11,7],[-11,7]]},{t:'polygon',points:[[0,13],[11,-7],[-11,-7]]}],
+    [{t:'line',x1:0,y1:-15,x2:0,y2:15},{t:'line',x1:-7,y1:-6,x2:7,y2:-6},{t:'line',x1:-9,y1:2,x2:9,y2:2},{t:'circle',cx:0,cy:-15,r:3}],
+    [{t:'polygon',points:[[0,-14],[14,0],[0,14],[-14,0]]},{t:'circle',cx:0,cy:0,r:7}],
+    [{t:'circle',cx:0,cy:0,r:14},{t:'line',x1:-14,y1:0,x2:14,y2:0},{t:'line',x1:0,y1:-14,x2:0,y2:14},{t:'circle',cx:0,cy:0,r:5}],
+    [{t:'polygon',points:[[0,-14],[8.2,11.3],[-13.3,-4.3],[13.3,-4.3],[-8.2,11.3]]}],
+    [{t:'circle',cx:0,cy:0,r:5},{t:'circle',cx:0,cy:0,r:10},{t:'circle',cx:0,cy:0,r:15}],
+    [{t:'polygon',points:[[-11,-11],[11,-11],[11,11],[-11,11]]},{t:'line',x1:-11,y1:-11,x2:11,y2:11},{t:'line',x1:11,y1:-11,x2:-11,y2:11}],
+    [{t:'circle',cx:0,cy:0,r:14},{t:'circle',cx:6,cy:0,r:12}],
+    [{t:'circle',cx:0,cy:0,r:7},{t:'circle',cx:0,cy:-7,r:7},{t:'circle',cx:6,cy:3.5,r:7},{t:'circle',cx:-6,cy:3.5,r:7}],
+    [{t:'polygon',points:[[0,-14],[12,-7],[12,7],[0,14],[-12,7],[-12,-7]]},{t:'circle',cx:0,cy:0,r:3}],
+    [{t:'circle',cx:0,cy:0,r:13},{t:'circle',cx:0,cy:0,r:4},{t:'line',x1:-13,y1:0,x2:-19,y2:0},{t:'line',x1:13,y1:0,x2:19,y2:0}],
+    [{t:'line',x1:0,y1:-15,x2:0,y2:15},{t:'line',x1:0,y1:-8,x2:10,y2:-15},{t:'line',x1:0,y1:-1,x2:-10,y2:-7},{t:'line',x1:0,y1:6,x2:10,y2:-1}],
+    [{t:'polygon',points:[[0,-14],[13,9],[-13,9]]},{t:'circle',cx:0,cy:2,r:6},{t:'circle',cx:0,cy:-14,r:2.5}]
+  ];
+  const LABELS=[
+    // emotions (the bulk)
+    'AWE','LONGING','WONDER','VERTIGO','REVERIE','SERENITY','YEARNING','DREAD','MELANCHOLY','NOSTALGIA',
+    'CATHARSIS','RAPTURE','EUPHORIA','SOLITUDE','GRIEF','CURIOSITY','HOPE','TENDERNESS','WISTFULNESS','BLISS',
+    'UNEASE','ELATION','SORROW','ANTICIPATION','LONELINESS','ECSTASY','REVERENCE','SAUDADE','HIRAETH','SONDER',
+    // esoteric (a handful)
+    'SIGIL','AETHER','OUROBOROS','GNOSIS','NUMEN','EGREGORE','QUINTESSENCE','LIMINALITY',
+    // galaxies (a handful)
+    'ANDROMEDA','WHIRLPOOL','SOMBRERO','PINWHEEL','TRIANGULUM','CARTWHEEL',
+    // stars (a handful)
+    'SIRIUS','VEGA','BETELGEUSE','ANTARES','RIGEL','POLARIS'];
+  const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const shape=(s,ax,ay)=>s.t==='circle'?el('circle',{cx:ax+s.cx,cy:ay+s.cy,r:s.r,pathLength:1}):s.t==='line'?el('line',{x1:ax+s.x1,y1:ay+s.y1,x2:ax+s.x2,y2:ay+s.y2,pathLength:1}):el('polygon',{points:s.points.map(p=>(ax+p[0])+','+(ay+p[1])).join(' '),pathLength:1});
+  let active=0;
+  function spawn(){
+    if(scrollY>innerHeight*0.5)return;
+    const cxs=innerWidth/2,cys=innerHeight/2,Rs=0.92*Math.min(innerWidth,innerHeight);
+    const ta=Math.random()*6.2832,tr=(0.34+Math.random()*0.24)*Rs;
+    let tx=cxs+Math.cos(ta)*tr,ty=cys+Math.sin(ta)*tr;const Mt=56;
+    tx=Math.max(Mt,Math.min(innerWidth-Mt,tx));ty=Math.max(Mt,Math.min(innerHeight-Mt,ty));
+    const ga=(0.78+Math.random()*0.18)*Rs,M=72;
+    let ax=cxs+Math.cos(ta)*ga,ay=cys+Math.sin(ta)*ga;ax=Math.max(M,Math.min(innerWidth-M,ax));ay=Math.max(M,Math.min(innerHeight-M,ay));
+    const left=ax<cxs,warm=Math.random()<0.3,g=el('g',{class:'mk'});
+    const lead=el('line',{x1:ax,y1:ay,x2:tx,y2:ty,class:'lead draw',pathLength:1});
+    const dot=el('circle',{cx:tx,cy:ty,r:2,class:'tdot',style:'opacity:0;transition:opacity .4s ease'});g.appendChild(lead);
+    const gls=GLYPHS[(Math.random()*GLYPHS.length)|0].map((s,i)=>{const e=shape(s,ax,ay);e.setAttribute('class','gl draw'+(warm?' warm':''));e.style.transitionDelay=(0.1+i*0.08)+'s';g.appendChild(e);return e;});
+    const lab=el('text',{x:ax+(left?-16:16),y:ay-16,class:warm?'warm':'',style:'opacity:0;transition:opacity .5s ease .2s'});
+    if(left)lab.setAttribute('text-anchor','end');lab.textContent=LABELS[(Math.random()*LABELS.length)|0];g.appendChild(lab);g.appendChild(dot);
+    mk.appendChild(g);active++;g.getBoundingClientRect();
+    lead.style.strokeDashoffset='0';gls.forEach(e=>e.style.strokeDashoffset='0');lab.style.opacity='0.85';dot.style.opacity='0.9';
+    setTimeout(()=>{lead.style.strokeDashoffset='1';gls.forEach(e=>e.style.strokeDashoffset='1');lab.style.opacity='0';dot.style.opacity='0';setTimeout(()=>{g.remove();active--;},800);},2600+Math.random()*1900);
+  }
+  setTimeout(spawn,1400);setInterval(()=>{if(active<2&&Math.random()<0.72)spawn();},2000);
+})();
+
+/* ===================== egress mark — the whirl ===================== */
+(function(){const el=document.getElementById('egresswhirl');if(!el)return;
+  let d='';const turns=5.0,r0=1.0,R=49,n=320;
+  for(let i=0;i<=n;i++){const t=i/n,th=t*turns*Math.PI*2,rad=r0*Math.pow(R/r0,t);
+    d+=(i?'L':'M')+(60+rad*Math.cos(th)).toFixed(1)+' '+(60+rad*Math.sin(th)).toFixed(1)+' ';}
+  el.setAttribute('d',d);})();
+
+/* ===================== telemetry (with depth) ===================== */
+const hx=v=>v.toString(16).toUpperCase().padStart(2,'0'),rnd=n=>Math.floor(Math.random()*n);
+function tick(){
+  const max=document.body.scrollHeight-innerHeight,p=max>0?Math.min(1,scrollY/max):0;
+  document.getElementById('e-tl').innerHTML=`<span class="k">◢ SPEC-00</span>\nstate · <span class="k">CONSUMING</span>\nnode  0x${hx(rnd(255))}${hx(rnd(255))}`;
+  document.getElementById('e-tr').innerHTML=`DEPTH <span class="g">${(p*9000).toFixed(0).padStart(4,'0')}</span> m\nINFALL ${(Math.random()*.2+.05).toFixed(3)} r/s\n<span class="r">●</span> REC ${rnd(9999).toString().padStart(4,'0')}`;
+  document.getElementById('e-br').innerHTML=`WARMTH <span class="g">${(Math.random()*.2+.78).toFixed(3)}</span>\nentropy ${Math.random().toFixed(5)}\n<span class="g">// observing</span>`;
+}
+tick();setInterval(tick,180);
+(function(){function jit(id,f,ms){const e=document.getElementById(id);if(!e)return;const u=()=>e.textContent=f();u();setInterval(u,ms);}
+  jit('m-warmth',()=>(Math.random()*.06+0.86).toFixed(3),1300);
+  jit('m-flux',()=>(Math.random()*40+18).toFixed(2),700);
+  jit('m-coh',()=>(Math.random()*.08+0.91).toFixed(3),1700);
+  jit('m-ent',()=>(Math.random()*.9+0.05).toFixed(4),520);})();
+</script>
+</body>
+</html>
