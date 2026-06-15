@@ -44,7 +44,19 @@ body{background:#000;color:var(--steel);font-family:var(--sans);line-height:1.65
 .vnav a::after{content:"";position:absolute;right:0;top:50%;width:5px;height:5px;border-radius:50%;background:rgba(164,142,100,.45);transform:translateY(-50%);transition:background .25s,box-shadow .25s}
 .vnav a:hover{color:var(--gold)}
 .vnav a:hover::after{background:var(--gold);box-shadow:0 0 9px var(--gold)}
-@media(max-width:820px){.vnav{right:14px;gap:14px;font-size:9px}}
+@media(max-width:820px){.vnav{display:none}}
+@media(max-width:560px){
+  .wrap{padding:0 20px}
+  section{padding:88px 0}
+  .edge{font-size:8.5px;line-height:1.6}
+  #e-tl{top:12px;left:12px}#e-tr{top:12px;right:12px}#e-br{bottom:12px;right:12px}
+  .surface{left:20px;bottom:46px}.surface .n{font-size:30px}
+  .scrolldown{font-size:9px}
+  .metrics{font-size:9.5px;gap:6px 16px}
+  .sec-head h2{font-size:24px}
+  .logrow .tt{font-size:15px}
+  .egress .links a{margin:0 9px}
+}
 
 /* content */
 main{position:relative;z-index:10}
@@ -240,7 +252,7 @@ section:not(.hero) .wrap::before{content:"";position:absolute;inset:-46px -36px;
 
 <script>
 /* ===================== GALAXY (fixed bg, scroll-zoom) ===================== */
-const N=32000, ARMS=4, ARMSC=0.6, DIFF=0.55, WIND=5.0, ROUT=1.0, HOLE=0.063, CSIG=0.035, COLW=0.34,
+const N=(Math.min(innerWidth,innerHeight)<820?10000:32000), ARMS=4, ARMSC=0.6, DIFF=0.55, WIND=5.0, ROUT=1.0, HOLE=0.063, CSIG=0.035, COLW=0.34,
   INFALL=0.0006, OMEGA=0.0009, FADE=0.32, COREB=2.8, DISKB=0.5, DIFFDIM=0.5, PSIZE=1.2, RK=1.18, ALPHA=2.4;
 const cv=document.getElementById('galaxy'),ctx=cv.getContext('2d');
 const sm=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x);};
