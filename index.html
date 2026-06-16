@@ -859,10 +859,10 @@ tick();setInterval(tick,180);
 
 /* ===================== EMBERS — auto-pull blog posts from the Quartz RSS feed ===================== */
 /* New posts published to Quartz appear here automatically. The static rows in #ember-log are the
-   fallback shown until posts exist under BLOG_PATH. CORS on the feed is open (Access-Control-Allow-Origin: *). */
+   fallback shown until posts exist under EMBERS_PATH. CORS on the feed is open (Access-Control-Allow-Origin: *). */
 (function(){
   const FEED='https://quartz-portfolio-omega.vercel.app/index.xml';
-  const BLOG_PATH='/Blog/';   // ← change to whatever folder you publish blog posts under in Quartz (e.g. '/Posts/')
+  const EMBERS_PATH='/Embers/';   // ← publish posts under an "Embers" folder in Quartz; change this if you rename it
   const MAX=6;
   const log=document.getElementById('ember-log');
   if(!log||!('fetch'in window))return;
@@ -874,7 +874,7 @@ tick();setInterval(tick,180);
     const txt=(it,sel)=>{const n=it.querySelector(sel);return n?n.textContent.trim():'';};
     const posts=[...doc.querySelectorAll('item')]
       .map(it=>({title:txt(it,'title'),link:txt(it,'link'),date:new Date(txt(it,'pubDate')),dek:txt(it,'description')}))
-      .filter(p=>p.link.indexOf(BLOG_PATH)>-1)            // only blog posts, not project pages
+      .filter(p=>p.link.indexOf(EMBERS_PATH)>-1)          // only Embers posts, not project pages
       .sort((a,b)=>b.date-a.date)
       .slice(0,MAX);
     if(!posts.length)return;                              // no posts yet → keep the static fallback rows
