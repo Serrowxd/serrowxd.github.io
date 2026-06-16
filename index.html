@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SERROW // SPEC-00 — descent</title>
+<title>SERROW // SPEC-00 — DESCENT</title>
 <meta name="description" content="The work of Serrow.">
 <meta name="theme-color" content="#05060c">
 <link rel="icon" type="image/svg+xml" href="serrow-favicon.svg">
@@ -97,7 +97,7 @@ section{min-height:100vh;display:flex;align-items:center;padding:120px 0}
 /* specimens */
 /* codex specimen-plates */
 .specs{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.spec{position:relative;background:linear-gradient(158deg,rgba(31,26,17,.6),rgba(15,12,8,.5));border:1px solid rgba(164,142,100,.2);box-shadow:inset 0 0 55px rgba(74,55,26,.12);padding:22px 24px 20px;overflow:hidden;transition:border-color .3s,transform .35s,background .3s}
+.spec{position:relative;display:block;text-decoration:none;cursor:pointer;background:linear-gradient(158deg,rgba(31,26,17,.6),rgba(15,12,8,.5));border:1px solid rgba(164,142,100,.2);box-shadow:inset 0 0 55px rgba(74,55,26,.12);padding:22px 24px 20px;overflow:hidden;transition:border-color .3s,transform .35s,background .3s}
 .spec:hover{border-color:rgba(242,200,121,.55);transform:translateY(-3px);background:linear-gradient(158deg,rgba(44,35,21,.74),rgba(19,15,9,.58))}
 .spec::before,.spec::after{content:"";position:absolute;width:11px;height:11px;border:1px solid rgba(242,200,121,.5);opacity:0;transition:opacity .3s}
 .spec::before{top:7px;left:7px;border-right:0;border-bottom:0}
@@ -354,20 +354,23 @@ section:not(.hero) .wrap::before{content:"";position:absolute;inset:-46px -36px;
       <div class="eyebrow">Forge // what gets built <span class="dep">· depth 3.8k m</span></div>
       <div class="sec-head"><h2>FORGE</h2><div class="c">04 active · falling in</div></div>
       <div class="specs">
-        <a class="spec"><div class="sd"><span>SPEC-01</span><span class="st">IN PRODUCTION</span></div><h3>GLYPH</h3><p>An agent-native format — staves you can drop in and run. The piece that's actually shipping.</p><div class="ft"><span class="tele">format · agents · runtime</span><span class="obs">observe →</span></div></a>
-        <a class="spec"><div class="sd"><span>SPEC-02</span><span class="st">NORTH STAR</span></div><h3>GALDR</h3><p>The runtime the whole stack reaches toward. Incantations that execute — the Weave hierarchy.</p><div class="ft"><span class="tele">runtime · weave · vision</span><span class="obs">observe →</span></div></a>
-        <a class="spec"><div class="sd"><span>SPEC-03</span><span class="st">SEED</span></div><h3>BLACKBIRD</h3><p>Lead enrichment, agent-first. The avian specimen — annotated, dissected, rendered as data.</p><div class="ft"><span class="tele">enrichment · seed</span><span class="obs">observe →</span></div></a>
-        <a class="spec"><div class="sd"><span>SPEC-04</span><span class="st">v0.6 BETA</span></div><h3>TWICE</h3><p>A presence-first interface for the plural mind. Paused, returning — the most personal build.</p><div class="ft"><span class="tele">identity · care · beta</span><span class="obs">observe →</span></div></a>
+        <a class="spec" href="https://quartz-portfolio-omega.vercel.app/Projects/Glyph" target="_blank" rel="noopener"><div class="sd"><span>SPEC-01</span><span class="st">IN PRODUCTION</span></div><h3>GLYPH</h3><p>An agent-native format — staves you can drop in and run. The piece that's actually shipping.</p><div class="ft"><span class="tele">format · agents · runtime</span><span class="obs">observe →</span></div></a>
+        <a class="spec" href="https://quartz-portfolio-omega.vercel.app/Projects/PBS-Insights" target="_blank" rel="noopener"><div class="sd"><span>SPEC-02</span><span class="st">IN PRODUCTION</span></div><h3>PBS INSIGHTS</h3><p>AI-powered deal analytics for auto dealerships — turns F&amp;I spreadsheets into real-time performance dashboards.</p><div class="ft"><span class="tele">analytics · ai · dashboard</span><span class="obs">observe →</span></div></a>
+        <a class="spec" href="https://quartz-portfolio-omega.vercel.app/Projects/Blackbird" target="_blank" rel="noopener"><div class="sd"><span>SPEC-03</span><span class="st">SEED</span></div><h3>BLACKBIRD</h3><p>Lead enrichment, agent-first. The avian specimen — annotated, dissected, rendered as data.</p><div class="ft"><span class="tele">enrichment · seed</span><span class="obs">observe →</span></div></a>
+        <a class="spec" href="https://quartz-portfolio-omega.vercel.app/Projects/Twice" target="_blank" rel="noopener"><div class="sd"><span>SPEC-04</span><span class="st">v0.6 BETA</span></div><h3>TWICE</h3><p>A presence-first interface for the plural mind. Paused, returning — the most personal build.</p><div class="ft"><span class="tele">identity · care · beta</span><span class="obs">observe →</span></div></a>
       </div>
     </div></section>
 
     <section id="embers"><div class="wrap reveal">
       <div class="eyebrow">Embers // sparks off the forge <span class="dep">· depth 6.4k m</span></div>
       <div class="sec-head"><h2>EMBERS</h2><div class="c">tutorials · progress · thoughts</div></div>
+      <!-- Auto-pulled from the Quartz RSS feed (see blog-feed script). These static rows are the fallback shown until posts exist under BLOG_PATH. -->
+      <div id="ember-log">
       <a class="logrow"><span class="date">2026·06·13</span><span class="ty tho">Thought</span><span class="tt">On being the specimen<small>Why I annotate everything — including myself — and how it became an aesthetic.</small></span><span class="rt">6 min</span></a>
       <a class="logrow"><span class="date">2026·06·10</span><span class="ty tut">Tutorial</span><span class="tt">Sigils that inscribe themselves<small>Animating SVG paths so geometry draws itself onto the page.</small></span><span class="rt">9 min</span></a>
       <a class="logrow"><span class="date">2026·06·05</span><span class="ty prog">Progress</span><span class="tt">Galdr: the Weave runtime takes shape<small>Wave → Stave → Weave. Where the execution model landed.</small></span><span class="rt">5 min</span></a>
       <a class="logrow"><span class="date">2026·05·28</span><span class="ty tho">Thought</span><span class="tt">Build it true, then open your hands<small>The Kayaba model: creation and release over control.</small></span><span class="rt">7 min</span></a>
+      </div>
     </div></section>
 
     <section id="egress" class="egress"><div class="wrap reveal">
@@ -771,15 +774,14 @@ tick();setInterval(tick,180);
 })();
 
 /* ===================== INTERIOR — content + detail overlay ===================== */
-/* To add a project or post, append an entry to PROJECTS / POSTS — it renders + becomes selectable automatically. */
+/* NOTE: this interior grid (#pgrid/#blist) is currently unmounted — the live project cards are the static .spec links in the Forge section, and the blog is auto-pulled from Quartz (see blog-feed script at the bottom). PROJECTS is kept here mirrored so the data source stays ready if the interior grid is re-enabled. */
 (function(){
   const it=document.getElementById('interior');if(!it)return;
   const PROJECTS=[
-    {code:'SPEC-01',name:'GLYPH',status:'IN PRODUCTION',tele:'format · agents · runtime',blurb:'An agent-native format — staves you drop in and run.',body:'GLYPH is the piece that actually ships — an agent-native format you can drop in and run.\nPlaceholder body. The full write-up, screenshots, and links land here.',link:''},
-    {code:'SPEC-02',name:'GALDR',status:'NORTH STAR',tele:'runtime · weave · vision',blurb:'The runtime the whole stack reaches toward.',body:'Incantations that execute — the Weave hierarchy.\nPlaceholder body.',link:''},
-    {code:'SPEC-03',name:'BLACKBIRD',status:'SEED',tele:'enrichment · seed',blurb:'Lead enrichment, agent-first.',body:'The avian specimen — annotated, dissected, rendered as data.\nPlaceholder body.',link:''},
-    {code:'SPEC-04',name:'TWICE',status:'v0.6 BETA',tele:'identity · care · beta',blurb:'A presence-first interface for the plural mind.',body:'Paused, returning — the most personal build.\nPlaceholder body.',link:''},
-    {code:'SPEC-05',name:'UNTITLED',status:'DRAFT',tele:'tbd',blurb:'A slot for the next one. Add any number — each becomes a card here.',body:'Placeholder. Edit the PROJECTS array to add a project; it renders and becomes selectable on its own.',link:''}
+    {code:'SPEC-01',name:'GLYPH',status:'IN PRODUCTION',tele:'format · agents · runtime',blurb:'An agent-native format — staves you drop in and run.',body:'GLYPH is the piece that actually ships — an agent-native format you can drop in and run.',link:'https://quartz-portfolio-omega.vercel.app/Projects/Glyph'},
+    {code:'SPEC-02',name:'PBS INSIGHTS',status:'IN PRODUCTION',tele:'analytics · ai · dashboard',blurb:'AI-powered deal analytics for auto dealerships.',body:'Turns F&I deal data — uploaded as PDFs, images, or CSVs — into real-time, role-specific performance dashboards. In production, piloted by a handful of dealerships.',link:'https://quartz-portfolio-omega.vercel.app/Projects/PBS-Insights'},
+    {code:'SPEC-03',name:'BLACKBIRD',status:'SEED',tele:'enrichment · seed',blurb:'Lead enrichment, agent-first.',body:'The avian specimen — annotated, dissected, rendered as data.',link:'https://quartz-portfolio-omega.vercel.app/Projects/Blackbird'},
+    {code:'SPEC-04',name:'TWICE',status:'v0.6 BETA',tele:'identity · care · beta',blurb:'A presence-first interface for the plural mind.',body:'Paused, returning — the most personal build.',link:'https://quartz-portfolio-omega.vercel.app/Projects/Twice'}
   ];
   const POSTS=[
     {date:'2026·06·13',kind:'Thought',title:'On being the specimen',dek:'Why I annotate everything — including myself.',read:'6 min',body:'A placeholder entry while the blog takes shape.\nThe idea: annotation as a way of seeing. I study and label the things I interact with — and eventually myself.\nReal writing replaces this. For now it proves the reading view: a comfortable measure, the maw dimmed behind the scrim, close to fall back to the index.'},
@@ -853,6 +855,38 @@ tick();setInterval(tick,180);
     setTimeout(()=>s.remove(),4200);
   }
   setInterval(writeAffirm,4200);
+})();
+
+/* ===================== EMBERS — auto-pull blog posts from the Quartz RSS feed ===================== */
+/* New posts published to Quartz appear here automatically. The static rows in #ember-log are the
+   fallback shown until posts exist under BLOG_PATH. CORS on the feed is open (Access-Control-Allow-Origin: *). */
+(function(){
+  const FEED='https://quartz-portfolio-omega.vercel.app/index.xml';
+  const BLOG_PATH='/Blog/';   // ← change to whatever folder you publish blog posts under in Quartz (e.g. '/Posts/')
+  const MAX=6;
+  const log=document.getElementById('ember-log');
+  if(!log||!('fetch'in window))return;
+  const esc=s=>{const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;};
+  const fmt=d=>isNaN(d)?'':d.getFullYear()+'·'+String(d.getMonth()+1).padStart(2,'0')+'·'+String(d.getDate()).padStart(2,'0');
+  fetch(FEED).then(r=>r.ok?r.text():Promise.reject(r.status)).then(xml=>{
+    const doc=new DOMParser().parseFromString(xml,'application/xml');
+    if(doc.querySelector('parsererror'))throw new Error('bad feed');
+    const txt=(it,sel)=>{const n=it.querySelector(sel);return n?n.textContent.trim():'';};
+    const posts=[...doc.querySelectorAll('item')]
+      .map(it=>({title:txt(it,'title'),link:txt(it,'link'),date:new Date(txt(it,'pubDate')),dek:txt(it,'description')}))
+      .filter(p=>p.link.indexOf(BLOG_PATH)>-1)            // only blog posts, not project pages
+      .sort((a,b)=>b.date-a.date)
+      .slice(0,MAX);
+    if(!posts.length)return;                              // no posts yet → keep the static fallback rows
+    log.innerHTML=posts.map(p=>
+      '<a class="logrow" href="'+esc(p.link)+'" target="_blank" rel="noopener">'+
+      '<span class="date">'+fmt(p.date)+'</span>'+
+      '<span class="ty prog">Post</span>'+
+      '<span class="tt">'+esc(p.title)+(p.dek?'<small>'+esc(p.dek)+'</small>':'')+'</span>'+
+      '<span class="rt">read →</span></a>'
+    ).join('');
+    if(window.__inReveal)window.__inReveal();
+  }).catch(()=>{/* offline / feed error → keep static fallback rows */});
 })();
 </script>
 </body>
