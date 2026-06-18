@@ -462,15 +462,18 @@ let f=0,spin=0,zoom=1;
 let _fpSum=0,_fpCount=0,_fpLast=0,_fpWin=30; // frame-time monitor state (short first window for a fast initial reaction, then steady-state)
 function frame(now){
   f++;
-  /* -- runtime perf monitor: short first window (~30 frames) reacts fast on weak devices; later 120-frame windows avoid over-reacting to transient hitches -- */
+  /* -- runtime perf monitor → converges toward 60fps. one notch per window; degradation is sticky so it walks down to the smoothest sustainable setting and stops.
+     order matters: on hi-DPI (retina) the bottleneck is fill-rate, so step DPR DOWN FIRST (2→1.5→1) — this settles at the highest resolution that still holds framerate — then cull the field proportional to the overshoot. short windows = fast feedback (settles in a few seconds, not a minute). -- */
   {const _d=now-(_fpLast||now);_fpLast=now;
   if(_d>0&&_d<200){_fpSum+=_d;_fpCount++;}
   if(_fpCount>=_fpWin){
     const _avg=_fpSum/_fpCount; // ms per frame
-    if(_avg>18&&P.length>1000){P.splice(Math.max(1000,Math.floor(P.length*0.9)));} // <55fps → trim 10%
-    if(_avg>22&&DPR_CAP>1.0){DPR_CAP=1.0;resize();}                // <45fps → drop to 1× DPR
-    if(_avg>18)document.documentElement.classList.add('no-fx');      // remove expensive CSS
-    _fpSum=0;_fpCount=0;_fpWin=120; // re-arm; subsequent windows are longer/steady-state
+    if(_avg>18){                                                     // slower than ~55fps → degrade one notch toward smooth
+      document.documentElement.classList.add('no-fx');              // shed expensive CSS (backdrop-filter/blend)
+      if(DPR_CAP>1.0){DPR_CAP=Math.max(1.0,DPR_CAP-0.5);resize();}  // fill-rate is the big lever on retina — drop resolution first
+      else if(P.length>1000){const over=Math.min(0.4,(_avg-16)/16);P.splice(Math.max(1000,Math.floor(P.length*(1-over))));} // DPR exhausted → cull proportional to how far over budget
+    }
+    _fpSum=0;_fpCount=0;_fpWin=45; // re-arm; tight windows so it actually settles
   }}
   // ---- descent driver: scroll, or the auto "suck-in" once the horizon is breached ----
   let easeSuck=0;
@@ -712,15 +715,17 @@ tick();setInterval(tick,TIER>=3?180:TIER>=2?500:2000);
   it.addEventListener('scroll',()=>{const m=it.scrollHeight-it.clientHeight;const f=m>0?Math.min(1,it.scrollTop/m):0;mtarget=f*f*(3-2*f);},{passive:true});  // ease: slow → ramp → slow toward the center
   function mframe(now){
     if(mrun){
-      /* runtime perf monitor — mirrors the galaxy's (which this canvas lacked). trims the cloud, drops DPR device-wide, and disables the costly ripple when slow */
+      /* runtime perf monitor — converges toward 60fps; mirrors the galaxy's controller. step DPR (device-wide) first, then cull proportional, then drop the ripple as a last resort */
       {const _d=now-(_mfLast||now);_mfLast=now;
       if(_d>0&&_d<200){_mfSum+=_d;_mfCount++;}
       if(_mfCount>=_mfWin){
         const _avg=_mfSum/_mfCount;
-        if(_avg>18&&MP.length>800){MP.splice(Math.max(800,Math.floor(MP.length*0.9)));} // <55fps → trim 10%
-        if(_avg>22&&DPR_CAP>1.0){DPR_CAP=1.0;mresize();}                                 // <45fps → 1× DPR (device-wide signal)
-        if(_avg>20)mRipple=false;                                                        // <50fps → drop the cloud shockwave; the emotion label still shows
-        _mfSum=0;_mfCount=0;_mfWin=120;
+        if(_avg>18){                                                                     // slower than ~55fps → degrade one notch
+          if(DPR_CAP>1.0){DPR_CAP=Math.max(1.0,DPR_CAP-0.5);mresize();}                  // fill-rate first (device-wide)
+          else if(MP.length>800){const over=Math.min(0.4,(_avg-16)/16);MP.splice(Math.max(800,Math.floor(MP.length*(1-over))));} // then cull proportional to overshoot
+        }
+        if(_avg>20)mRipple=false;                                                        // <50fps → drop the cloud shockwave (the emotion label still shows)
+        _mfSum=0;_mfCount=0;_mfWin=45;
       }}
       mt++;
       mdepth+=(mtarget-mdepth)*0.05;                       // smooth, weighty inward flow
