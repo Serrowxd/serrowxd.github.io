@@ -19,7 +19,7 @@
   --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;overflow-x:clip;-webkit-text-size-adjust:100%;text-size-adjust:100%} /* clip stray horizontal overflow (letter-spacing/fixed-chrome trailing px) so mobile renders at 100% — clip, not hidden, to avoid creating a scroll container that would break the descent; text-size-adjust stops mobile text inflation */
 /* minimal themed scrollbar */
 html{scrollbar-width:thin;scrollbar-color:rgba(198,186,158,.28) transparent}
 ::-webkit-scrollbar{width:9px;height:9px}
@@ -708,9 +708,20 @@ tick();setInterval(tick,TIER>=3?180:TIER>=2?500:2000);
   }
   for(let i=0;i<MN;i++)MP.push(mseed({}));
   let mspin=0,mdepth=0,mtarget=0,mrun=false,mt=0,mfade=0,mtick=0,tag=null,_mRaf=0,_mStopped=true;
+  let _mfSum=0,_mfCount=0,_mfLast=0,_mfWin=30,mRipple=true; // maw runtime perf monitor + ripple-enable flag (this canvas previously had no runtime monitor — the galaxy's safety net wasn't wired up here)
   it.addEventListener('scroll',()=>{const m=it.scrollHeight-it.clientHeight;const f=m>0?Math.min(1,it.scrollTop/m):0;mtarget=f*f*(3-2*f);},{passive:true});  // ease: slow → ramp → slow toward the center
-  function mframe(){
+  function mframe(now){
     if(mrun){
+      /* runtime perf monitor — mirrors the galaxy's (which this canvas lacked). trims the cloud, drops DPR device-wide, and disables the costly ripple when slow */
+      {const _d=now-(_mfLast||now);_mfLast=now;
+      if(_d>0&&_d<200){_mfSum+=_d;_mfCount++;}
+      if(_mfCount>=_mfWin){
+        const _avg=_mfSum/_mfCount;
+        if(_avg>18&&MP.length>800){MP.splice(Math.max(800,Math.floor(MP.length*0.9)));} // <55fps → trim 10%
+        if(_avg>22&&DPR_CAP>1.0){DPR_CAP=1.0;mresize();}                                 // <45fps → 1× DPR (device-wide signal)
+        if(_avg>20)mRipple=false;                                                        // <50fps → drop the cloud shockwave; the emotion label still shows
+        _mfSum=0;_mfCount=0;_mfWin=120;
+      }}
       mt++;
       mdepth+=(mtarget-mdepth)*0.05;                       // smooth, weighty inward flow
       mfade+=(1-mfade)*0.035;                              // resolve up from the breach-black
@@ -723,7 +734,9 @@ tick();setInterval(tick,TIER>=3?180:TIER>=2?500:2000);
       mx.globalCompositeOperation='source-over';mx.fillStyle='rgba(3,4,10,0.34)';mx.fillRect(0,0,MW,MH);
       mx.globalCompositeOperation='lighter';
       let rip=null;                                                   // a "tag" event sends a shockwave from the named point
-      if(tag){const age=mt-tag.f0;if(age>tag.life){tag=null;}else{const onset=1-Math.exp(-age/7);rip={x:tag.x,y:tag.y,r:age*tag.speed,amp:tag.amp*onset*Math.exp(-age/tag.decay),hue:tag.hue,flash:Math.sin(Math.PI*Math.min(1,age/tag.flashLife))};}}
+      if(tag){const age=mt-tag.f0;
+        if(age>tag.life){tag=null;}                                   // always age the tag out (so the label cycle keeps spawning) …
+        else if(mRipple){const onset=1-Math.exp(-age/7);rip={x:tag.x,y:tag.y,r:age*tag.speed,amp:tag.amp*onset*Math.exp(-age/tag.decay),hue:tag.hue,flash:Math.sin(Math.PI*Math.min(1,age/tag.flashLife))};}} // … but only perturb the cloud when the ripple is affordable
       for(const p of MP){
         const a=p.a+mspin*p.sp;
         const ringB=Math.exp(-((p.rr-1.0)*(p.rr-1.0))/sig2);          // brightness peaks ON the ring
@@ -801,7 +814,11 @@ tick();setInterval(tick,TIER>=3?180:TIER>=2?500:2000);
   let tagReady=false,tagReadyTimer=0;
   setInterval(()=>{if(mrun&&tagReady&&!tag&&Math.random()<0.35)spawnTag();},1500);  // ~ once every 6–8s, after settling
   let mtelId=0;
-  window.__mawStart=()=>{mrun=true;mfade=0;mdepth=0;mtarget=0;_mStopped=false;updateTel();clearInterval(mtelId);mtelId=setInterval(updateTel,TIER>=3?170:TIER>=2?400:2000);tagReady=false;clearTimeout(tagReadyTimer);tagReadyTimer=setTimeout(()=>{tagReady=true;},4000);_mRaf=requestAnimationFrame(mframe);};  // settle ~4s before the cloud starts naming
+  window.__mawStart=()=>{mrun=true;mfade=0;mdepth=0;mtarget=0;_mStopped=false;
+    mresize();                                                                       // pick up any DPR_CAP the galaxy already lowered at runtime
+    _mfSum=0;_mfCount=0;_mfLast=0;_mfWin=30;                                          // re-arm the perf monitor with a fast first window on each entry
+    if(document.documentElement.classList.contains('no-fx')){mRipple=false;if(MP.length>800)MP.splice(Math.max(800,Math.floor(MP.length*0.6)));} // device already judged weak (low tier or galaxy-flagged) → start lean
+    updateTel();clearInterval(mtelId);mtelId=setInterval(updateTel,TIER>=3?170:TIER>=2?400:2000);tagReady=false;clearTimeout(tagReadyTimer);tagReadyTimer=setTimeout(()=>{tagReady=true;},4000);_mRaf=requestAnimationFrame(mframe);};  // settle ~4s before the cloud starts naming
   window.__mawStop=()=>{mrun=false;_mStopped=true;cancelAnimationFrame(_mRaf);clearInterval(mtelId);tagReady=false;clearTimeout(tagReadyTimer);};
 })();
 
