@@ -300,6 +300,12 @@ section:not(.hero) .wrap::before{content:"";position:absolute;inset:-46px -36px;
 .im-inner p b{color:var(--ink)}
 .im-tag{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:#8fb0ff;text-transform:uppercase;text-decoration:none;border:1px solid rgba(124,150,210,.3);padding:8px 14px;transition:.25s}
 .im-tag:hover{color:var(--gold);border-color:rgba(242,200,121,.5)}
+/* ---- perf-tier overrides (applied via .no-fx on <html>) ---- */
+.no-fx .panel{backdrop-filter:none!important}
+.no-fx section:not(.hero) .wrap::before{backdrop-filter:none!important}
+.no-fx .scan,.no-fx .in-scan{display:none}
+.no-fx .markspin{animation:none!important}
+.no-fx .dot,.no-fx .scrollcue .d,.no-fx .in-cue .d,.no-fx .scrolldown .dot{animation:none!important;opacity:.8}
 </style>
 </head>
 <body>
@@ -423,8 +429,19 @@ section:not(.hero) .wrap::before{content:"";position:absolute;inset:-46px -36px;
   </div>
 
 <script>
+/* ===================== PERF TIER ===================== */
+/* 0=minimal  1=low  2=mid  3=full
+   Sync heuristic runs first; runtime frame-monitor can downgrade further. */
+const _rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const _isMobile=Math.min(innerWidth,innerHeight)<820;
+const _mem=navigator.deviceMemory||8, _cpu=navigator.hardwareConcurrency||4;
+const TIER=_rm?0:(_isMobile&&(_mem<4||_cpu<4))?1:(_isMobile||_mem<4||_cpu<4)?2:3;
+let DPR_CAP=TIER===0?1.0:TIER===1?1.0:TIER===2?1.5:2.0;
+if(TIER<=1)document.documentElement.classList.add('no-fx');
+window.PERF_TIER=TIER; // expose for console inspection
+
 /* ===================== GALAXY (fixed bg, scroll-zoom) ===================== */
-const N=(Math.min(innerWidth,innerHeight)<820?10000:32000), ARMS=4, ARMSC=0.6, DIFF=0.55, WIND=5.0, ROUT=1.0, HOLE=0.063, CSIG=0.035, COLW=0.34,
+const N=TIER===0?300:TIER===1?3000:TIER===2?8000:32000, ARMS=4, ARMSC=0.6, DIFF=0.55, WIND=5.0, ROUT=1.0, HOLE=0.063, CSIG=0.035, COLW=0.34,
   INFALL=0.0006, OMEGA=0.0009, FADE=0.32, COREB=2.8, DISKB=0.5, DIFFDIM=0.5, PSIZE=1.2, RK=1.18, ALPHA=2.4;
 const cv=document.getElementById('galaxy'),ctx=cv.getContext('2d');
 const sm=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x);};
@@ -432,7 +449,7 @@ const breath=t=>0.75+0.25*(0.5*Math.sin(t*0.013)+0.3*Math.sin(t*0.021+1.3)+0.2*M
 const g3=()=>(Math.random()+Math.random()+Math.random()-1.5)/1.5;
 const GO=[255,170,75],WH=[232,240,255];
 let W,H,DPR,cx,cy,R;
-function resize(){DPR=Math.min(devicePixelRatio||1,2);W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;
+function resize(){DPR=Math.min(devicePixelRatio||1,DPR_CAP);W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;
   cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';cx=W/2;cy=H/2;R=Math.min(W,H)*RK;
   ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);}
 resize();addEventListener('resize',resize);
@@ -442,8 +459,19 @@ function seed(p,f){const k=Math.floor(Math.random()*ARMS);p.diff=Math.random()<D
   p.r=f?0.95+Math.random()*0.12:Math.random()*1.06;p.w=0.6+Math.random()*0.9;return p;}
 for(let i=0;i<N;i++)P.push(seed({},0));
 let f=0,spin=0,zoom=1;
+let _fpSum=0,_fpCount=0,_fpLast=0,_fpWin=30; // frame-time monitor state (short first window for a fast initial reaction, then steady-state)
 function frame(now){
   f++;
+  /* -- runtime perf monitor: short first window (~30 frames) reacts fast on weak devices; later 120-frame windows avoid over-reacting to transient hitches -- */
+  {const _d=now-(_fpLast||now);_fpLast=now;
+  if(_d>0&&_d<200){_fpSum+=_d;_fpCount++;}
+  if(_fpCount>=_fpWin){
+    const _avg=_fpSum/_fpCount; // ms per frame
+    if(_avg>18&&P.length>1000){P.splice(Math.max(1000,Math.floor(P.length*0.9)));} // <55fps → trim 10%
+    if(_avg>22&&DPR_CAP>1.0){DPR_CAP=1.0;resize();}                // <45fps → drop to 1× DPR
+    if(_avg>18)document.documentElement.classList.add('no-fx');      // remove expensive CSS
+    _fpSum=0;_fpCount=0;_fpWin=120; // re-arm; subsequent windows are longer/steady-state
+  }}
   // ---- descent driver: scroll, or the auto "suck-in" once the horizon is breached ----
   let easeSuck=0;
   if(phase==='charging'){
@@ -473,6 +501,8 @@ function frame(now){
   if(phase==='charging'){breach.textContent='◢ COUPLING — HOLD';breach.style.opacity=(0.6+0.4*charge).toFixed(2);}
   else if(phase==='idle'&&hoverZone&&curP<0.06){breach.textContent='◢ HOLD TO BREACH';breach.style.opacity='.9';}
   else breach.style.opacity='0';
+  // interior is opaque on top during 'black' — skip the (fully occluded) galaxy draw, but keep the loop alive and state (spin/curP) advancing so resurface resumes instantly and the zoom-back-out plays seamlessly
+  if(phase==='black'){requestAnimationFrame(frame);return;}
   const br=breath(f);const Rz=R*zoom;
   ctx.globalCompositeOperation='source-over';ctx.fillStyle=`rgba(0,0,0,${FADE})`;ctx.fillRect(0,0,W,H);
   ctx.globalCompositeOperation='lighter';
@@ -628,7 +658,7 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
     lead.style.strokeDashoffset='0';gls.forEach(e=>e.style.strokeDashoffset='0');lab.style.opacity='0.85';dot.style.opacity='0.9';
     setTimeout(()=>{lead.style.strokeDashoffset='1';gls.forEach(e=>e.style.strokeDashoffset='1');lab.style.opacity='0';dot.style.opacity='0';setTimeout(()=>{g.remove();active--;},800);},2600+Math.random()*1900);
   }
-  setTimeout(spawn,1400);setInterval(()=>{if(active<2&&Math.random()<0.72)spawn();},2000);
+  if(TIER>=2){setTimeout(spawn,1400);setInterval(()=>{if(active<2&&Math.random()<0.72)spawn();},2000);}
 })();
 
 /* ===================== egress mark — the whirl ===================== */
@@ -649,20 +679,22 @@ function tick(){
   document.getElementById('e-tr').innerHTML=`DEPTH <span class="g">${(p*9000).toFixed(0).padStart(4,'0')}</span> m\nINFALL ${inf.toFixed(3)} r/s\n<span class="r">●</span> REC ${rnd(9999).toString().padStart(4,'0')}`;
   document.getElementById('e-br').innerHTML=`WARMTH <span class="g">${(Math.random()*.2+.78).toFixed(3)}</span>\nentropy ${Math.random().toFixed(5)}\n<span class="g">// ${breaching?'breaching':'observing'}</span>`;
 }
-tick();setInterval(tick,180);
+tick();setInterval(tick,TIER>=3?180:TIER>=2?500:2000);
 (function(){function jit(id,f,ms){const e=document.getElementById(id);if(!e)return;const u=()=>e.textContent=f();u();setInterval(u,ms);}
-  jit('m-warmth',()=>(Math.random()*.06+0.86).toFixed(3),1300);
-  jit('m-flux',()=>(Math.random()*40+18).toFixed(2),700);
-  jit('m-coh',()=>(Math.random()*.08+0.91).toFixed(3),1700);
-  jit('m-ent',()=>(Math.random()*.9+0.05).toFixed(4),520);})();
+  if(TIER>=2){ // skip live jitter on low-perf devices — values stay static from HTML
+    jit('m-warmth',()=>(Math.random()*.06+0.86).toFixed(3),1300);
+    jit('m-flux',()=>(Math.random()*40+18).toFixed(2),700);
+    jit('m-coh',()=>(Math.random()*.08+0.91).toFixed(3),1700);
+    jit('m-ent',()=>(Math.random()*.9+0.05).toFixed(4),520);
+  }})();
 
 /* ===================== INTERIOR — inside the maw ===================== */
 (function(){
   const cvm=document.getElementById('maw');if(!cvm)return;
   const mx=cvm.getContext('2d'),it=document.getElementById('interior'),tl=document.getElementById('in-tl'),tr=document.getElementById('in-tr'),br=document.getElementById('in-br');
   let MW,MH,MDPR,mcx,mcy,MR;
-  const MN=(Math.min(innerWidth,innerHeight)<820?5000:14000);
-  function mresize(){MDPR=Math.min(devicePixelRatio||1,2);MW=cvm.width=innerWidth*MDPR;MH=cvm.height=innerHeight*MDPR;cvm.style.width=innerWidth+'px';cvm.style.height=innerHeight+'px';mcx=MW/2;mcy=MH/2;MR=Math.min(MW,MH);}
+  const MN=TIER===0?200:TIER===1?1500:TIER===2?4000:14000;
+  function mresize(){MDPR=Math.min(devicePixelRatio||1,DPR_CAP);MW=cvm.width=innerWidth*MDPR;MH=cvm.height=innerHeight*MDPR;cvm.style.width=innerWidth+'px';cvm.style.height=innerHeight+'px';mcx=MW/2;mcy=MH/2;MR=Math.min(MW,MH);}
   mresize();addEventListener('resize',mresize);
   const MP=[];
   const rg=()=>(Math.random()+Math.random()+Math.random()-1.5)/1.5;   // ~triangular, peaks at 0
@@ -675,7 +707,7 @@ tick();setInterval(tick,180);
     return p;
   }
   for(let i=0;i<MN;i++)MP.push(mseed({}));
-  let mspin=0,mdepth=0,mtarget=0,mrun=false,mt=0,mfade=0,mtick=0,tag=null;
+  let mspin=0,mdepth=0,mtarget=0,mrun=false,mt=0,mfade=0,mtick=0,tag=null,_mRaf=0,_mStopped=true;
   it.addEventListener('scroll',()=>{const m=it.scrollHeight-it.clientHeight;const f=m>0?Math.min(1,it.scrollTop/m):0;mtarget=f*f*(3-2*f);},{passive:true});  // ease: slow → ramp → slow toward the center
   function mframe(){
     if(mrun){
@@ -733,9 +765,9 @@ tick();setInterval(tick,180);
       bc.addColorStop(1,'rgba(2,3,9,0)');
       mx.fillStyle=bc;mx.beginPath();mx.arc(0,0,hr,0,6.2832);mx.fill();mx.restore();
     }
-    requestAnimationFrame(mframe);
+    if(!_mStopped)_mRaf=requestAnimationFrame(mframe);
   }
-  requestAnimationFrame(mframe);
+  // loop is started by __mawStart, not here
   function updateTel(){                                    // singularity readouts — interval-driven (like the home page), independent of rAF
     const m=it.scrollHeight-it.clientHeight,dp=m>0?Math.min(1,it.scrollTop/m):0,rnd=n=>Math.floor(Math.random()*n),hx=v=>('0'+v.toString(16)).slice(-2).toUpperCase();
     if(tl)tl.innerHTML='◢ SPEC-00-1 // SINGULARITY\nstate · <span class="t">???</span>\nnode  0x'+hx(rnd(255))+hx(rnd(255));
@@ -769,8 +801,8 @@ tick();setInterval(tick,180);
   let tagReady=false,tagReadyTimer=0;
   setInterval(()=>{if(mrun&&tagReady&&!tag&&Math.random()<0.35)spawnTag();},1500);  // ~ once every 6–8s, after settling
   let mtelId=0;
-  window.__mawStart=()=>{mrun=true;mfade=0;mdepth=0;mtarget=0;updateTel();clearInterval(mtelId);mtelId=setInterval(updateTel,170);tagReady=false;clearTimeout(tagReadyTimer);tagReadyTimer=setTimeout(()=>{tagReady=true;},4000);};  // settle ~4s before the cloud starts naming
-  window.__mawStop=()=>{mrun=false;clearInterval(mtelId);tagReady=false;clearTimeout(tagReadyTimer);};
+  window.__mawStart=()=>{mrun=true;mfade=0;mdepth=0;mtarget=0;_mStopped=false;updateTel();clearInterval(mtelId);mtelId=setInterval(updateTel,TIER>=3?170:TIER>=2?400:2000);tagReady=false;clearTimeout(tagReadyTimer);tagReadyTimer=setTimeout(()=>{tagReady=true;},4000);_mRaf=requestAnimationFrame(mframe);};  // settle ~4s before the cloud starts naming
+  window.__mawStop=()=>{mrun=false;_mStopped=true;cancelAnimationFrame(_mRaf);clearInterval(mtelId);tagReady=false;clearTimeout(tagReadyTimer);};
 })();
 
 /* ===================== INTERIOR — content + detail overlay ===================== */
