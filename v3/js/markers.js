@@ -1,6 +1,7 @@
-// Self-drawing esoteric markers that ride the flow and get eaten by the throat.
-// Same 14 glyph designs + label pool as the 2D descent; each marker is anchored to a point in the funnel
-// (far side, in the dust shell), projected to the screen every frame, drifting inward with the spin.
+// Self-drawing esoteric markers that ride the flow. Dark plate, gold ink (refinement round 1):
+// each marker sits on a small backing plate with corner ticks, gold glyph + label, and a bright tether dot on the
+// particle it names. They drift with the wall; when their hold ends they retract IN PLACE — only a marker that
+// truly reaches the throat is eaten.
 import * as THREE from 'three';
 const NS = 'http://www.w3.org/2000/svg', TAU = Math.PI * 2;
 const GLYPHS = [
@@ -42,41 +43,53 @@ export function initMarkers({ camera, getState, R, L, omega, wind }) {
   }
   function spawn(st) {
     const camAng = Math.atan2(st.dir.y, st.dir.x);
-    const v0 = 0.32 + Math.random() * 0.45;
-    const ang0 = camAng + Math.PI + (Math.random() - 0.5) * 2.2;
-    const warm = Math.random() < 0.3, left = Math.random() < 0.5;
+    const v0 = 0.42 + Math.random() * 0.42;
+    const ang0 = camAng + Math.PI + (Math.random() - 0.5) * 2.0;
     const g = el('g', { class: 'mk' });
     const lead = el('line', { class: 'lead draw', pathLength: 1 });
-    const dot = el('circle', { r: 2, class: 'tdot', style: 'opacity:0;transition:opacity .4s ease' });
-    const body = el('g', {});
-    const gls = GLYPHS[(Math.random() * GLYPHS.length) | 0].map((s, i) => { const e = shape(s); e.setAttribute('class', 'gl draw' + (warm ? ' warm' : '')); e.style.transitionDelay = (0.1 + i * 0.08) + 's'; body.appendChild(e); return e; });
-    const lab = el('text', { x: left ? -16 : 16, y: -16, class: warm ? 'warm' : '', style: 'opacity:0;transition:opacity .5s ease .2s' });
-    if (left) lab.setAttribute('text-anchor', 'end');
+    const dot = el('circle', { r: 2.8, class: 'tdot', style: 'opacity:0;transition:opacity .4s ease' });
+    const body = el('g', { class: 'mkbody' });
+    // plate: sized after the label is measured
+    const plate = el('rect', { class: 'mkplate', rx: 1.5 });
+    const ticks = [0, 1, 2, 3].map(() => el('path', { class: 'tick' }));
+    body.appendChild(plate); ticks.forEach(t => body.appendChild(t));
+    const gls = GLYPHS[(Math.random() * GLYPHS.length) | 0].map((s, i) => { const e = shape(s); e.setAttribute('class', 'gl draw'); e.style.transitionDelay = (0.1 + i * 0.08) + 's'; body.appendChild(e); return e; });
+    const lab = el('text', { x: 26, y: 5, class: 'lab', style: 'opacity:0;transition:opacity .5s ease .2s' });
     lab.textContent = LABELS[(Math.random() * LABELS.length) | 0];
     body.appendChild(lab); g.appendChild(lead); g.appendChild(body); g.appendChild(dot); svg.appendChild(g);
+    let tw = lab.textContent.length * 10.4; try { tw = Math.max(tw * 0.8, Math.min(tw, lab.getComputedTextLength())); } catch (e) {}
+    const x0 = -24, y0 = -24, w = 26 + tw + 34, h = 48;
+    plate.setAttribute('x', x0); plate.setAttribute('y', y0); plate.setAttribute('width', w); plate.setAttribute('height', h);
+    const tk = 6, X1 = x0 + w, Y1 = y0 + h;
+    ticks[0].setAttribute('d', `M${x0} ${y0 + tk} V${y0} H${x0 + tk}`); ticks[1].setAttribute('d', `M${X1 - tk} ${y0} H${X1} V${y0 + tk}`);
+    ticks[2].setAttribute('d', `M${x0} ${Y1 - tk} V${Y1} H${x0 + tk}`); ticks[3].setAttribute('d', `M${X1 - tk} ${Y1} H${X1} V${Y1 - tk}`);
     g.getBoundingClientRect();
-    lead.style.strokeDashoffset = '0'; gls.forEach(e => e.style.strokeDashoffset = '0'); lab.style.opacity = '0.85'; dot.style.opacity = '0.9';
-    live.push({ g, lead, dot, body, gls, lab, v: v0, ang: ang0, age: 0, hold: 3.2 + Math.random() * 2.2, eaten: false, done: false });
+    body.classList.add('on');
+    lead.style.strokeDashoffset = '0'; gls.forEach(e => e.style.strokeDashoffset = '0'); lab.style.opacity = '1'; dot.style.opacity = '1';
+    live.push({ g, lead, dot, body, gls, lab, v: v0, ang: ang0, age: 0, hold: 4.0 + Math.random() * 2.5, closing: false, eaten: false, done: false, eatT: 0 });
   }
   let acc = 0;
   function update(dt) {
     const st = getState();
     acc += dt;
-    if (acc > 2.0) { acc = 0; if (live.length < 2 && st.s < 0.72 && Math.random() < 0.72) spawn(st); }
+    if (acc > 5.5) { acc = 0; if (live.length < 2 && st.s < 0.9 && Math.random() < 0.7) spawn(st); }
     for (const m of live) {
       m.age += dt;
-      // ride the flow: inward + around, faster as it nears the throat
-      const k = 1 + 3 * Math.pow(1 - m.v, 2);
-      m.v -= dt * 0.012 * k * (m.eaten ? 6 : 1);
-      m.ang += dt * (omega + wind * 0.4 * k * 0.1);
-      const a = project(m.v, m.ang, 0.9), t = project(m.v - 0.12, m.ang + 0.5, 0.9);
+      // ride the flow with the wall: slow inward drift + the spin. The marker stays with what it names.
+      const k = 1 + 2 * Math.pow(1 - m.v, 2);
+      m.v -= dt * 0.006 * k * (m.eaten ? 8 : 1);
+      m.ang += dt * (omega + wind * 0.04 * k);
+      const a = project(m.v, m.ang, 0.9), t = project(m.v - 0.1, m.ang + 0.45, 0.9);
       const off = a.behind || a.x < -80 || a.x > innerWidth + 80 || a.y < -80 || a.y > innerHeight + 80;
-      if (!m.eaten && (m.age > m.hold || m.v < 0.2 || off)) {
-        m.eaten = true;
+      if (!m.closing && (m.age > m.hold || off)) {                       // hold over: retract in place
+        m.closing = true; m.eatT = 0;
         m.lead.style.strokeDashoffset = '1'; m.gls.forEach(e => e.style.strokeDashoffset = '1'); m.lab.style.opacity = '0'; m.dot.style.opacity = '0';
-        m.eatT = 0;
+        m.body.classList.remove('on');
       }
-      if (m.eaten) { m.eatT += dt; if (m.eatT > 0.9 || m.v < 0.02) { m.done = true; m.g.remove(); continue; } }
+      if (!m.eaten && m.v < 0.14) {                                       // it actually reached the throat: eaten
+        m.eaten = true; if (!m.closing) { m.closing = true; m.eatT = 0; m.lead.style.strokeDashoffset = '1'; m.gls.forEach(e => e.style.strokeDashoffset = '1'); m.lab.style.opacity = '0'; m.dot.style.opacity = '0'; m.body.classList.remove('on'); }
+      }
+      if (m.closing) { m.eatT += dt; if (m.eatT > 1.0) { m.done = true; m.g.remove(); continue; } }
       const sc = m.eaten ? Math.max(0.05, 1 - m.eatT * 1.1) : 1;
       m.body.setAttribute('transform', `translate(${a.x.toFixed(1)},${a.y.toFixed(1)}) scale(${sc.toFixed(3)})`);
       m.dot.setAttribute('cx', t.x.toFixed(1)); m.dot.setAttribute('cy', t.y.toFixed(1));

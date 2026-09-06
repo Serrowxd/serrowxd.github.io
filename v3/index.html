@@ -37,16 +37,19 @@ html{overflow-x:clip;-webkit-text-size-adjust:100%;text-size-adjust:100%;scrollb
 ::-webkit-scrollbar-thumb:hover{background:rgba(242,200,121,.55);background-clip:content-box}
 body{background:#000;color:var(--steel);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased}
 #gl{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
-#track{position:relative;height:700vh;pointer-events:none}
+#track{position:relative;height:560vh;pointer-events:none}
 .scan{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.1;mix-blend-mode:multiply;
   background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.5) 2px 3px)}
 #markers{position:fixed;inset:0;z-index:3;pointer-events:none;width:100%;height:100%}
 .mk line,.mk circle,.mk polygon{fill:none;vector-effect:non-scaling-stroke}
 .mk .draw{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .65s ease}
-.mk .lead{stroke:rgba(190,165,112,.5);stroke-width:1}
-.mk .gl{stroke:rgba(206,186,142,.85);stroke-width:1.3}.mk .gl.warm{stroke:rgba(242,200,121,.92)}
-.mk .tdot{fill:rgba(205,180,130,.95)}
-.mk text{font:11.5px var(--mono);letter-spacing:.16em;fill:rgba(198,186,158,.9);text-transform:uppercase}.mk text.warm{fill:rgba(242,200,121,.92)}
+.mk .lead{stroke:rgba(242,200,121,.75);stroke-width:1.2;filter:drop-shadow(0 0 3px rgba(0,0,0,.9))}
+.mk .gl{stroke:#f2c879;stroke-width:1.5}
+.mk .tdot{fill:#f2c879;filter:drop-shadow(0 0 6px rgba(242,200,121,.95)) drop-shadow(0 0 2px rgba(0,0,0,1))}
+.mk .mkplate{fill:rgba(7,6,3,.78);stroke:rgba(242,200,121,.28);stroke-width:1;opacity:0;transition:opacity .35s ease}
+.mk .tick{fill:none;stroke:rgba(242,200,121,.85);stroke-width:1.2;opacity:0;transition:opacity .35s ease .1s}
+.mkbody.on .mkplate,.mkbody.on .tick{opacity:1}
+.mk text{font:11.5px var(--mono);letter-spacing:.16em;fill:#f2c879;text-transform:uppercase;text-shadow:0 0 6px rgba(242,200,121,.4)}
 
 /* instrument chrome */
 .edge{position:fixed;z-index:20;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--steel-dim);white-space:pre;pointer-events:none;line-height:1.7}
@@ -81,7 +84,7 @@ body{background:#000;color:var(--steel);font-family:var(--sans);line-height:1.65
 .plate{position:fixed;left:0;top:0;z-index:10;width:min(680px,60vw);opacity:0;pointer-events:none;transform-origin:50% 50%;will-change:transform,opacity}
 .plate.live{pointer-events:auto}
 .plate .wrap{position:relative;padding:34px 38px}
-.plate .wrap::before{content:"";position:absolute;inset:-10px -6px;z-index:-1;background:rgba(9,7,4,.62);backdrop-filter:blur(3px);
+.plate .wrap::before{content:"";position:absolute;inset:-10px -6px;z-index:-1;opacity:var(--form,1);background:rgba(9,7,4,.62);backdrop-filter:blur(3px);
   -webkit-mask-image:radial-gradient(126% 112% at 50% 50%,#000 55%,transparent 100%);mask-image:radial-gradient(126% 112% at 50% 50%,#000 55%,transparent 100%)}
 .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);opacity:.85}
 .eyebrow::before{content:"◢ "}
@@ -115,27 +118,38 @@ body{background:#000;color:var(--steel);font-family:var(--sans);line-height:1.65
 .metrics .ml{color:rgba(205,162,106,.6);letter-spacing:.2em}
 .metrics .m b{color:var(--gold);font-weight:500;margin-left:6px;letter-spacing:.04em}
 
-/* forge */
-.specs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.spec{position:relative;display:block;text-decoration:none;cursor:pointer;background:linear-gradient(158deg,rgba(31,26,17,.6),rgba(15,12,8,.5));border:1px solid rgba(164,142,100,.2);box-shadow:inset 0 0 55px rgba(74,55,26,.12);padding:16px 18px 14px;overflow:hidden;transition:border-color .3s,transform .35s,background .3s}
-.spec:hover{border-color:rgba(242,200,121,.55);transform:translateY(-3px);background:linear-gradient(158deg,rgba(44,35,21,.74),rgba(19,15,9,.58))}
-.spec::before,.spec::after{content:"";position:absolute;width:11px;height:11px;border:1px solid rgba(242,200,121,.5);opacity:0;transition:opacity .3s}
-.spec::before{top:7px;left:7px;border-right:0;border-bottom:0}
-.spec::after{bottom:7px;right:7px;border-left:0;border-top:0}
-.spec:hover::before,.spec:hover::after{opacity:1}
-.spec .sd{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;color:var(--steel-dim);border-bottom:1px solid rgba(150,132,96,.16);padding-bottom:9px}
+/* forge — debris caught in the flow (Serrow: "I like B") */
+.specs{display:grid;grid-template-columns:1fr 1fr;gap:14px;perspective:1100px}
+.spec{position:relative;display:block;text-decoration:none;color:inherit;cursor:pointer;padding:16px 18px 14px;background:linear-gradient(158deg,rgba(36,30,19,.84),rgba(14,11,7,.8));
+  clip-path:polygon(2% 0,96% 1%,100% 12%,99% 88%,94% 100%,6% 99%,0 90%,1% 8%);
+  transform:rotateY(-9deg) rotateX(5deg) rotate(-1.6deg);transform-style:preserve-3d;box-shadow:0 30px 50px rgba(0,0,0,.55);animation:drift 9s ease-in-out infinite alternate;transition:filter .3s}
+.spec:nth-child(2n){transform:rotateY(8deg) rotateX(-4deg) rotate(1.4deg);clip-path:polygon(0 3%,94% 0,100% 9%,98% 92%,90% 100%,3% 98%,0 84%);animation-delay:-3s}
+.spec:nth-child(3n){transform:rotateY(-5deg) rotateX(7deg) rotate(.8deg);animation-delay:-6s}
+.spec:nth-child(5){transform:rotateY(6deg) rotateX(3deg) rotate(-1deg);animation-delay:-1.5s}
+@keyframes drift{from{translate:0 0}to{translate:0 -7px}}
+.spec:hover{filter:brightness(1.18)}
+.spec::before{content:"";position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(60% 40% at 20% 10%,rgba(242,200,121,.10),transparent 60%),
+  radial-gradient(40% 50% at 85% 90%,rgba(255,240,210,.08),transparent 60%),
+  repeating-radial-gradient(circle at 70% 30%,transparent 0 3px,rgba(255,255,255,.025) 3px 4px)}
+.spec::after{content:"";position:absolute;left:-46px;top:38%;width:46px;height:1px;background:linear-gradient(90deg,transparent,rgba(242,200,121,.7));pointer-events:none}
+.spec .tdot{position:absolute;left:-49px;top:calc(38% - 2px);width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.spec .dust{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(1px 1px at 12% 80%,rgba(242,200,121,.7),transparent),radial-gradient(1px 1px at 30% 20%,rgba(255,255,255,.5),transparent),radial-gradient(1.5px 1.5px at 78% 68%,rgba(242,200,121,.55),transparent),radial-gradient(1px 1px at 88% 24%,rgba(255,255,255,.45),transparent),radial-gradient(1px 1px at 55% 92%,rgba(242,200,121,.5),transparent),radial-gradient(1px 1px at 66% 10%,rgba(255,255,255,.4),transparent)}
+.spec .sd{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;color:var(--steel-dim)}
 .spec .sd .st{color:var(--cyan)}
-.spec h3{font-family:var(--mono);font-size:20px;color:var(--ink);margin:11px 0 6px;letter-spacing:.05em;font-weight:600}
+.spec h3{font-family:var(--mono);font-size:20px;color:var(--ink);margin:11px 0 6px;letter-spacing:.05em;font-weight:600;text-shadow:0 0 18px rgba(242,200,121,.18)}
 .spec:hover h3{color:var(--gold)}
-.spec p{font-size:12.5px;color:var(--steel);max-width:34em;line-height:1.55}
+.spec p{font-size:12.5px;color:var(--steel);max-width:32em;line-height:1.55}
 .spec .ft{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:14px}
 .spec .tele{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--steel-dim);text-transform:uppercase}
-.spec .obs{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--gold);opacity:.45;transition:opacity .3s;text-transform:uppercase;white-space:nowrap}
+.spec .obs{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--gold);opacity:.6;transition:opacity .3s;text-transform:uppercase;white-space:nowrap}
 .spec:hover .obs{opacity:1}
+.plate .wrap{overflow:visible}
 
 /* embers → garden */
-.garden{display:block;text-decoration:none;color:inherit;border:1px solid rgba(164,142,100,.22);background:linear-gradient(158deg,rgba(31,26,17,.55),rgba(15,12,8,.45));padding:26px 28px;transition:border-color .3s,background .3s}
-.garden:hover{border-color:rgba(242,200,121,.55);background:linear-gradient(158deg,rgba(44,35,21,.7),rgba(19,15,9,.55))}
+.garden{position:relative;display:block;text-decoration:none;color:inherit;background:linear-gradient(158deg,rgba(36,30,19,.82),rgba(14,11,7,.78));padding:26px 28px;clip-path:polygon(1% 0,97% 2%,100% 14%,99% 90%,95% 100%,4% 98%,0 86%);transform:rotateY(-6deg) rotateX(3deg) rotate(-.8deg);animation:drift 9s ease-in-out infinite alternate;transition:filter .3s}
+.garden:hover{filter:brightness(1.15)}
+.garden::after{content:"";position:absolute;left:-46px;top:40%;width:46px;height:1px;background:linear-gradient(90deg,transparent,rgba(242,200,121,.7))}
 .garden .gt{font-family:var(--mono);font-size:22px;color:var(--ink);letter-spacing:.06em;font-weight:600}
 .garden:hover .gt{color:var(--gold)}
 .garden p{font-size:13.5px;margin:10px 0 14px;max-width:40em}
@@ -198,6 +212,24 @@ body.inside .plate,body.inside .edge,body.inside .vnav,body.inside .surface,body
 .in-mk line.lead{stroke-width:1;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .65s ease;vector-effect:non-scaling-stroke}
 .in-mk circle{transition:opacity .45s ease}
 .in-mk text{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:0;transition:opacity .5s ease .15s}
+
+/* dust-text sections: hit areas + summoned annotation (no cards) */
+#hits{position:fixed;inset:0;z-index:12;pointer-events:none}
+#hits .dt-text{position:fixed;display:none;transform-origin:0 0;font-family:var(--mono);white-space:nowrap;line-height:1.15;padding:0 0.1em;text-decoration:none;color:var(--gold);text-shadow:0 0 10px rgba(242,200,121,.3);opacity:0;pointer-events:none;cursor:default;transition:opacity .3s}
+#hits .dt-text.title{color:var(--ink);text-shadow:0 0 16px rgba(242,200,121,.22)}
+#hits .dt-text.hit{cursor:pointer}
+#hits .dt-text.hit:hover{color:#fff;opacity:.85!important;text-shadow:0 0 14px rgba(242,200,121,.6)}
+.dt-eyebrow{position:fixed;font-family:var(--mono);font-size:10.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);opacity:0;pointer-events:none;white-space:nowrap;text-shadow:0 0 8px rgba(0,0,0,.9)}
+#annot{position:fixed;z-index:13;width:320px;transform:translateY(-50%);background:rgba(7,6,3,.86);border:1px solid rgba(242,200,121,.28);padding:14px 16px 12px;font-family:var(--mono);opacity:0;pointer-events:none;transition:opacity .25s ease;backdrop-filter:blur(2px)}
+#annot.on{opacity:1;pointer-events:auto}
+#annot::before,#annot::after{content:"";position:absolute;width:7px;height:7px;border:1px solid rgba(242,200,121,.85)}
+#annot::before{top:-1px;left:-1px;border-right:0;border-bottom:0}#annot::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+#annot .ae{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--steel-dim)}#annot .ae b{color:var(--cyan);font-weight:500}
+#annot .an{font-size:15px;letter-spacing:.08em;color:var(--ink);margin:6px 0 6px;font-weight:600}
+#annot .al{font-family:var(--sans);font-size:12.5px;line-height:1.55;color:var(--steel)}
+#annot .aa{display:inline-block;margin-top:10px;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);text-decoration:none}
+#annot .aa:hover{text-shadow:0 0 10px rgba(242,200,121,.6)}
+body.inside #hits,body.inside #annot{display:none!important}
 </style>
 </head>
 <body>
@@ -214,71 +246,14 @@ body.inside .plate,body.inside .edge,body.inside .vnav,body.inside .surface,body
   <div id="breach"></div>
   <button id="audio" aria-label="toggle drone"><span class="bars"><i></i><i></i><i></i><i></i></span> drone · off</button>
   <div class="vnav" id="vnav">
-    <a data-s="0">Observe</a><a data-s="0.22">Entity</a><a data-s="0.45">Forge</a><a data-s="0.66">Embers</a><a data-s="0.86">Egress</a>
+    <a data-s="0">Observe</a><a data-s="0.26">Entity</a><a data-s="0.52">Forge</a><a data-s="0.76">Embers</a><a data-s="1">Egress</a>
   </div>
 
   <div id="track"></div>
 
-  <!-- plates: anchored to 3D points by main.js -->
-  <section class="plate" id="entity" data-s="0.22"><div class="wrap reveal">
-    <div class="eyebrow">Entity // subject dossier <span class="dep">· depth 1.6k m</span></div>
-    <div class="sec-head"><h2>ENTITY</h2><div class="c">spec-00 · serrow</div></div>
-    <div class="about">
-      <div class="bio2">
-        <div class="lead">I create things, with a deep love of <b>visual esoteria</b>.</div>
-        <p>I enjoy creating things. We build to solve problems and create beauty. Most of it starts as some idea I got stuck on and had to chase down.</p>
-        <p>Serrow can be found immersed in projects, virtual reality, or a good book.</p>
-      </div>
-      <div>
-        <div class="capture"><span class="ct tl"></span><span class="ct tr"></span><span class="ct bl"></span><span class="ct br"></span>
-          <div class="cap-inner">capture<b>SPEC-00</b><span class="pend">frame pending</span></div></div>
-        <div class="fields">
-          <div><span class="k">Designation</span><span class="val g">SPEC-00</span></div>
-          <div><span class="k">Discipline</span><span class="val">build · design · write</span></div>
-          <div><span class="k">Focus</span><span class="val">systems · interfaces</span></div>
-          <div><span class="k">Aesthetic</span><span class="val">visual esoteria</span></div>
-          <div><span class="k">Principle</span><span class="val">curiosity first</span></div>
-          <div><span class="k">Status</span><span class="val g">EVOLVING</span></div>
-        </div>
-      </div>
-    </div>
-    <div class="metrics"><span class="ml">instrument</span>
-      <span class="m">warmth<b id="m-warmth">0.886</b></span><span class="m">flux<b id="m-flux">42.0</b></span><span class="m">coherence<b id="m-coh">0.940</b></span><span class="m">entropy<b id="m-ent">0.5418</b></span></div>
-  </div></section>
-
-  <section class="plate" id="forge" data-s="0.45"><div class="wrap reveal">
-    <div class="eyebrow">Forge // what gets built <span class="dep">· depth 3.8k m</span></div>
-    <div class="sec-head"><h2>FORGE</h2><div class="c">05 active · falling in</div></div>
-    <div class="specs">
-      <a class="spec" href="https://garden.serrow.dev/Projects/Glyph" target="_blank" rel="noopener"><div class="sd"><span>SPEC-01</span><span class="st">IN PRODUCTION</span></div><h3>GLYPH</h3><p>An agent-native format — staves you can drop in and run. The piece that's actually shipping.</p><div class="ft"><span class="tele">format · agents · runtime</span><span class="obs">observe →</span></div></a>
-      <a class="spec" href="https://garden.serrow.dev/Projects/PBS-Insights" target="_blank" rel="noopener"><div class="sd"><span>SPEC-02</span><span class="st">IN PRODUCTION</span></div><h3>PBS INSIGHTS</h3><p>AI-powered deal analytics for auto dealerships — turns F&amp;I spreadsheets into real-time performance dashboards.</p><div class="ft"><span class="tele">analytics · ai · dashboard</span><span class="obs">observe →</span></div></a>
-      <a class="spec" href="https://garden.serrow.dev/Projects/Blackbird" target="_blank" rel="noopener"><div class="sd"><span>SPEC-03</span><span class="st">SEED</span></div><h3>BLACKBIRD</h3><p>Lead enrichment, agent-first. The avian specimen — annotated, dissected, rendered as data.</p><div class="ft"><span class="tele">enrichment · seed</span><span class="obs">observe →</span></div></a>
-      <a class="spec" href="https://garden.serrow.dev/Projects/Twice" target="_blank" rel="noopener"><div class="sd"><span>SPEC-04</span><span class="st">v0.8 BETA</span></div><h3>TWICE</h3><p>A presence-first interface for the plural mind. v0.8 out; the most personal build.</p><div class="ft"><span class="tele">identity · care · beta</span><span class="obs">observe →</span></div></a>
-      <a class="spec" href="https://garden.serrow.dev/Projects/The-Descent" target="_blank" rel="noopener"><div class="sd"><span>SPEC-05</span><span class="st">v3 · LIVE</span></div><h3>THE DESCENT</h3><p>The piece you're inside — a portfolio shaped as the creator's mind.</p><div class="ft"><span class="tele">interactive · three.js · art</span><span class="obs">observe →</span></div></a>
-    </div>
-  </div></section>
-
-  <section class="plate" id="embers" data-s="0.66"><div class="wrap reveal">
-    <div class="eyebrow">Embers // sparks off the forge <span class="dep">· depth 6.4k m</span></div>
-    <div class="sec-head"><h2>EMBERS</h2><div class="c">tutorials · progress · thoughts</div></div>
-    <a class="garden" href="https://garden.serrow.dev" target="_blank" rel="noopener">
-      <div class="gt">THE LIMINAL GARDEN</div>
-      <p>Where the embers land. Notes, project pages, and the running log live in the garden — a second surface, tended in the open.</p>
-      <div class="go"><span class="d"></span> enter the garden →</div>
-    </a>
-  </div></section>
-
-  <section class="plate egress" id="egress" data-s="0.86"><div class="wrap reveal">
-    <div class="eyebrow">Egress // the event horizon <span class="dep">· depth 9.0k m</span></div>
-    <svg class="mark" viewBox="0 0 120 120" width="140" height="140" aria-label="Serrow">
-      <defs><radialGradient id="gw" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f2c879"/><stop offset="60%" stop-color="#f2c879" stop-opacity=".9"/><stop offset="100%" stop-color="#f2c879" stop-opacity=".15"/></radialGradient></defs>
-      <g class="markspin"><path id="egresswhirl" pathLength="1" fill="none" stroke="url(#gw)" stroke-width="2.6" stroke-linecap="round"/></g>
-      <circle cx="60" cy="60" r="3.2" fill="#f2c879"/>
-    </svg>
-    <div class="big">WHERE I <b>EXIST</b></div>
-    <div class="sub">// the instrument is still recording</div>
-    <div class="links"><a href="https://github.com/Serrowxd" target="_blank" rel="noopener">GitHub</a><a href="https://garden.serrow.dev" target="_blank" rel="noopener">Garden</a><a href="https://www.instagram.com/serrowxd/" target="_blank" rel="noopener">Insta</a></div>
-  </div></section>
+  <!-- sections are spelled out by dust motes (main.js); these hold the hover hit areas + the summoned annotation -->
+  <div id="hits"></div>
+  <div id="annot"></div>
 
   <div id="black"></div>
   <div id="interior">
